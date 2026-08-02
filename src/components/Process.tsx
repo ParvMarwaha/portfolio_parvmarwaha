@@ -18,24 +18,28 @@ export default function Process() {
     const el = containerRef.current;
     if (!el) return;
 
-    const words = gsap.utils.toArray<HTMLElement>(".process-step");
-    
-    gsap.fromTo(
-      words,
-      { opacity: 0.1, x: -50 },
-      {
-        opacity: 1,
-        x: 0,
-        stagger: 0.5,
-        ease: "power2.out",
-        scrollTrigger: {
-          trigger: el,
-          start: "top 85%",
-          end: "bottom 15%",
-          scrub: true,
-        },
-      }
-    );
+    const ctx = gsap.context(() => {
+      const words = gsap.utils.toArray<HTMLElement>(".process-step");
+      
+      gsap.fromTo(
+        words,
+        { opacity: 0.1, x: -50 },
+        {
+          opacity: 1,
+          x: 0,
+          stagger: 0.2,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: el,
+            start: "top 70%",
+            end: "center 40%",
+            scrub: true,
+          },
+        }
+      );
+    });
+
+    return () => ctx.revert();
   }, []);
 
   return (

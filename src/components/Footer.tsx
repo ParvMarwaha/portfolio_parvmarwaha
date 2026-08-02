@@ -15,42 +15,46 @@ export default function Footer() {
   useEffect(() => {
     if (!containerRef.current || !footerRef.current || !textRef.current) return;
 
-    // 1. Cinematic Footer Reveal (Parallax)
-    gsap.fromTo(
-      footerRef.current,
-      { yPercent: -40 }, // Start slightly higher up
-      {
-        yPercent: 0,
-        ease: "none",
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top bottom",
-          end: "bottom bottom",
-          scrub: true,
-        },
-      }
-    );
+    const ctx = gsap.context(() => {
+      // 1. Cinematic Footer Reveal (Parallax)
+      gsap.fromTo(
+        footerRef.current,
+        { yPercent: -40 }, // Start slightly higher up
+        {
+          yPercent: 0,
+          ease: "none",
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "top bottom",
+            end: "bottom bottom",
+            scrub: true,
+          },
+        }
+      );
 
-    // 2. High-Impact Typing / 3D Unblur Effect
-    const wordElements = textRef.current.querySelectorAll(".footer-word");
-    gsap.fromTo(
-      wordElements,
-      { opacity: 0, y: 80, filter: "blur(12px)", rotateX: -60 },
-      {
-        opacity: 1,
-        y: 0,
-        filter: "blur(0px)",
-        rotateX: 0,
-        stagger: 0.1,
-        ease: "power2.out",
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top 90%", 
-          end: "bottom 30%",
-          scrub: true,
-        },
-      }
-    );
+      // 2. High-Impact Typing / 3D Unblur Effect
+      const wordElements = textRef.current.querySelectorAll(".footer-word");
+      gsap.fromTo(
+        wordElements,
+        { opacity: 0, y: 80, filter: "blur(12px)", rotateX: -60 },
+        {
+          opacity: 1,
+          y: 0,
+          filter: "blur(0px)",
+          rotateX: 0,
+          stagger: 0.1,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "top 70%", 
+            end: "bottom bottom",
+            scrub: true,
+          },
+        }
+      );
+    });
+
+    return () => ctx.revert();
   }, []);
 
   return (
