@@ -18,7 +18,7 @@ function AnimatedLink({ name, href, onMouseEnter, onMouseLeave, onClick }: any) 
   return (
     <Link 
       href={href} 
-      className="relative flex overflow-hidden group text-6xl md:text-8xl lg:text-[10vw] font-normal uppercase leading-[0.85] tracking-tight"
+      className="relative flex overflow-hidden group text-5xl md:text-7xl lg:text-[7vw] font-normal uppercase leading-[0.85] tracking-tight"
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onClick={onClick}
