@@ -102,21 +102,17 @@ export default function WorksGallery() {
           </div>
         </motion.div>
 
-        {/* Clean Standard Grid */}
-        <motion.div 
-          layout 
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 lg:gap-x-12 gap-y-16 md:gap-y-24"
-        >
-          <AnimatePresence mode="popLayout">
+        {/* Match Homepage 2-Column Landscape Grid */}
+        <motion.div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 md:gap-x-12 gap-y-16 md:gap-y-24">
+          <AnimatePresence mode="wait">
             {filteredProjects.map((project, index) => (
               <motion.div
-                layout
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
                 transition={{ 
-                  duration: 0.5,
-                  ease: [0.25, 1, 0.5, 1], // Very smooth, non-bouncy ease
+                  duration: 0.4,
+                  ease: "easeOut",
                   delay: index * 0.05 
                 }}
                 key={project.id}
@@ -124,20 +120,20 @@ export default function WorksGallery() {
                 data-cursor="hover"
               >
                 <Link href={`/work/${project.slug}`}>
-                  <div className="relative w-full aspect-[4/5] overflow-hidden bg-charcoal/5">
+                  <div className="relative w-full aspect-[4/3] md:aspect-[16/10] overflow-hidden rounded-md bg-charcoal/5">
                     <Image
                       src={project.image}
                       alt={project.title}
                       fill
-                      className="object-cover scale-110 transition-transform duration-[1.5s] ease-[cubic-bezier(0.19,1,0.22,1)] group-hover:scale-100"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover scale-110 transition-transform duration-700 group-hover:scale-100"
+                      sizes="(max-width: 768px) 100vw, 50vw"
                     />
                   </div>
-                  <div className="mt-6 md:mt-8 flex flex-col">
-                    <h3 className="text-2xl md:text-3xl font-sans font-bold tracking-tight text-charcoal group-hover:text-bronze transition-colors duration-300">
+                  <div className="mt-5 md:mt-6 flex flex-col">
+                    <h3 className="text-xl md:text-2xl font-serif text-charcoal tracking-tight group-hover:text-bronze transition-colors duration-300">
                       {project.title}
                     </h3>
-                    <p className="text-xs font-sans text-graphite uppercase tracking-widest mt-2 md:mt-3 font-semibold">
+                    <p className="text-sm font-sans text-graphite mt-1 md:mt-2 font-normal">
                       {project.category}
                     </p>
                   </div>
