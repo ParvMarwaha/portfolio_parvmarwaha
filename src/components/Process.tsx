@@ -22,17 +22,17 @@ export default function Process() {
     
     gsap.fromTo(
       words,
-      { opacity: 0.1, x: -50 },
+      { opacity: 0.2, x: -50 },
       {
         opacity: 1,
         x: 0,
-        duration: 1.5,
-        stagger: 0.2,
-        ease: "power3.out",
+        stagger: 0.5,
+        ease: "power2.out",
         scrollTrigger: {
           trigger: el,
-          start: "top 60%",
-          toggleActions: "play none none reverse",
+          start: "top 75%",
+          end: "bottom 25%",
+          scrub: 1.5,
         },
       }
     );
