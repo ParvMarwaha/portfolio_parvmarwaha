@@ -11,8 +11,7 @@ export default function Hero() {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Delay to wait for the Preloader (which takes ~5.9s before curtain slide)
-      const tl = gsap.timeline({ delay: 5.8 });
+      const tl = gsap.timeline();
 
       tl.fromTo(
         imageRef.current,

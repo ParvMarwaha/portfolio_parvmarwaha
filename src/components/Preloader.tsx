@@ -21,6 +21,11 @@ export default function Preloader() {
     document.body.style.overflow = "hidden";
     document.body.style.height = "100vh";
     
+    // Aggressively prevent Lenis / Native scroll via wheel and touch events
+    const preventScroll = (e: Event) => e.preventDefault();
+    window.addEventListener("wheel", preventScroll, { passive: false });
+    window.addEventListener("touchmove", preventScroll, { passive: false });
+    
     const counter = counterRef.current;
     
     // Parallax mouse interaction for the counter
@@ -48,6 +53,8 @@ export default function Preloader() {
           document.body.style.height = "";
           window.scrollTo(0, 0); // Force top again just to be safe
           window.removeEventListener("mousemove", onMouseMove);
+          window.removeEventListener("wheel", preventScroll);
+          window.removeEventListener("touchmove", preventScroll);
           
           // Refresh ScrollTrigger to recalculate layout dimensions now that body is unconstrained
           setTimeout(() => {
@@ -117,6 +124,8 @@ export default function Preloader() {
       document.body.style.overflow = "";
       document.body.style.height = "";
       window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("wheel", preventScroll);
+      window.removeEventListener("touchmove", preventScroll);
     };
   }, []);
 
