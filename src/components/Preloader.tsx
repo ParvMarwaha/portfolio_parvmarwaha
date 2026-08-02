@@ -16,10 +16,19 @@ export default function Preloader() {
       window.history.scrollRestoration = "manual";
     }
     
-    // Prevent scrolling during preloader and force scroll to top
-    window.scrollTo(0, 0);
+    // Prevent scrolling during preloader
     document.body.style.overflow = "hidden";
     document.body.style.height = "100vh";
+    
+    // Aggressively lock scroll to top 60 times a second to defeat Next.js scroll restoration
+    const lockScroll = () => {
+      window.scrollTo(0, 0);
+      if (typeof window !== "undefined" && (window as any).lenis) {
+        (window as any).lenis.scrollTo(0, { immediate: true });
+        (window as any).lenis.stop();
+      }
+    };
+    gsap.ticker.add(lockScroll);
     
     // Aggressively prevent Lenis / Native scroll via wheel and touch events
     const preventScroll = (e: Event) => e.preventDefault();
@@ -51,6 +60,12 @@ export default function Preloader() {
           setIsFinished(true);
           document.body.style.overflow = "";
           document.body.style.height = "";
+          
+          gsap.ticker.remove(lockScroll);
+          if (typeof window !== "undefined" && (window as any).lenis) {
+            (window as any).lenis.start();
+          }
+          
           window.scrollTo(0, 0); // Force top again just to be safe
           window.removeEventListener("mousemove", onMouseMove);
           window.removeEventListener("wheel", preventScroll);

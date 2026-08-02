@@ -19,6 +19,9 @@ export default function SmoothScroll({
       touchMultiplier: 1.5,
     });
 
+    // Expose lenis globally so the Preloader can physically stop it
+    (window as any).lenis = lenis;
+
     function raf(time: number) {
       lenis.raf(time);
       requestAnimationFrame(raf);
