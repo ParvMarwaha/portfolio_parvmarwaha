@@ -93,13 +93,13 @@ export default function Navigation() {
       <div className="fixed top-8 right-8 z-[60] mix-blend-difference text-ivory">
         <button 
           onClick={() => setIsOpen(!isOpen)} 
-          className="h-8 w-20 overflow-hidden flex items-center justify-center group"
+          className="h-8 w-16 overflow-hidden relative group"
           data-cursor="hover"
         >
           <motion.div
             animate={{ y: isOpen ? -32 : 0 }}
             transition={{ duration: 0.5, ease: [0.76, 0, 0.24, 1] }}
-            className="relative flex flex-col items-center justify-start w-full"
+            className="flex flex-col w-full"
           >
             <span className="h-8 w-full flex items-center justify-end font-bold tracking-widest text-sm uppercase group-hover:opacity-70 transition-opacity">Menu</span>
             <span className="h-8 w-full flex items-center justify-end font-bold tracking-widest text-sm uppercase group-hover:opacity-70 transition-opacity">Close</span>
@@ -182,7 +182,7 @@ export default function Navigation() {
               transition={{ delay: 0.8, duration: 0.8 }}
             >
               <span>Socials</span>
-              <span>2026 © Studio</span>
+              <span>2026 © Parv Marwaha</span>
             </motion.div>
           </motion.div>
         )}
