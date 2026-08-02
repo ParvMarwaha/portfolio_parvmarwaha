@@ -90,7 +90,7 @@ export default function Navigation() {
 
   return (
     <>
-      <div className="fixed top-8 right-8 z-[60] mix-blend-difference text-ivory">
+      <div className="fixed top-8 right-6 md:right-16 z-[60] mix-blend-difference text-ivory">
         <button 
           onClick={() => setIsOpen(!isOpen)} 
           className="h-8 w-16 overflow-hidden relative group"
@@ -107,7 +107,7 @@ export default function Navigation() {
         </button>
       </div>
 
-      <div className="fixed top-8 left-8 z-[60] mix-blend-difference text-ivory pointer-events-none">
+      <div className="fixed top-8 left-6 md:left-16 z-[60] mix-blend-difference text-ivory pointer-events-none">
         <span className="text-xl font-bold tracking-tighter">Parv Marwaha.</span>
       </div>
 

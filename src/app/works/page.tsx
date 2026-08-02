@@ -67,7 +67,7 @@ export default function WorksGallery() {
       transition={{ duration: 0.8, ease: [0.76, 0, 0.24, 1] }}
       className="min-h-screen bg-ivory text-charcoal pt-32 pb-32 px-6 md:px-16 w-full relative z-10"
     >
-      <div className="max-w-[1400px] mx-auto w-full">
+      <div className="w-full">
         
         {/* Header */}
         <motion.div 
