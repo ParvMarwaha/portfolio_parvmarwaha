@@ -2,6 +2,7 @@
 
 import { useRef, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { gsap } from "@/utils/gsap";
 
 const mainWorks = [
@@ -102,7 +103,7 @@ export default function SelectedWorks() {
       </div>
 
       {/* Other Projects Section */}
-      <div className="mt-32 w-full">
+      <Link href="/works" className="mt-32 w-full block group cursor-pointer" data-cursor="hover">
         <div 
           ref={collageRef}
           className="w-full h-[50vh] md:h-[60vh] bg-[#2A2A2A] rounded-md relative overflow-hidden"
@@ -121,17 +122,23 @@ export default function SelectedWorks() {
               />
             </div>
           ))}
+          
+          <div className="absolute inset-0 bg-charcoal/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-50 flex items-center justify-center">
+            <span className="text-ivory text-sm uppercase tracking-widest font-bold bg-charcoal/80 px-6 py-3 rounded-full backdrop-blur-sm">View All Works</span>
+          </div>
         </div>
         
-        <div className="mt-6 md:mt-8">
-          <h3 className="text-xl md:text-2xl font-serif text-charcoal tracking-tight">
-            Other projects
-          </h3>
-          <p className="text-sm md:text-base font-sans text-graphite mt-1 md:mt-2">
-            Mixed Reality (AR/VR), print, publication and branding projects
-          </p>
+        <div className="mt-6 md:mt-8 flex justify-between items-end">
+          <div>
+            <h3 className="text-xl md:text-2xl font-serif text-charcoal tracking-tight group-hover:text-bronze transition-colors">
+              Other projects
+            </h3>
+            <p className="text-sm md:text-base font-sans text-graphite mt-1 md:mt-2">
+              Experience Design, Visual Design, and Photography
+            </p>
+          </div>
         </div>
-      </div>
+      </Link>
 
     </section>
   );

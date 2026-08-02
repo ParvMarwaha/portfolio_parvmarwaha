@@ -6,10 +6,10 @@ import Link from "next/link";
 import Image from "next/image";
 
 const navLinks = [
-  { name: "Works", href: "#works", image: "/images/work1.png" },
-  { name: "Philosophy", href: "#philosophy", image: "/images/work2.png" },
-  { name: "Studio", href: "#studio", image: "/images/work3.png" },
-  { name: "Contact", href: "#contact", image: "/images/studio.png" },
+  { name: "Works", href: "/works", image: "/images/work1.png" },
+  { name: "Philosophy", href: "/#philosophy", image: "/images/work2.png" },
+  { name: "Studio", href: "/#studio", image: "/images/work3.png" },
+  { name: "Contact", href: "/#contact", image: "/images/studio.png" },
 ];
 
 
