@@ -107,8 +107,10 @@ export default function Navigation() {
         </button>
       </div>
 
-      <div className="fixed top-8 left-6 md:left-16 z-[60] mix-blend-difference text-ivory pointer-events-none">
-        <span className="text-xl font-bold tracking-tighter">Parv Marwaha.</span>
+      <div className="fixed top-8 left-6 md:left-16 z-[60] mix-blend-difference text-ivory">
+        <Link href="/" className="text-xl font-bold tracking-tighter hover:opacity-70 transition-opacity" data-cursor="hover">
+          Parv Marwaha.
+        </Link>
       </div>
 
       <AnimatePresence mode="wait">
