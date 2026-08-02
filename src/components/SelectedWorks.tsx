@@ -123,8 +123,10 @@ export default function SelectedWorks() {
             </div>
           ))}
           
-          <div className="absolute inset-0 bg-charcoal/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-50 flex items-center justify-center">
-            <span className="text-ivory text-sm uppercase tracking-widest font-bold bg-charcoal/80 px-6 py-3 rounded-full backdrop-blur-sm">View All Works</span>
+          <div className="absolute inset-0 bg-charcoal/30 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-700 z-50 flex items-center justify-center">
+            <span className="text-ivory text-2xl md:text-4xl font-serif tracking-tight scale-95 group-hover:scale-100 transition-transform duration-700">
+              View all works
+            </span>
           </div>
         </div>
         
