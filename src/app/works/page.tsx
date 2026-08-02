@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -60,17 +60,28 @@ export default function WorksGallery() {
     : allProjects.filter(p => p.category === activeCategory);
 
   return (
-    <main className="min-h-screen bg-ivory text-charcoal pt-32 pb-32 px-6 md:px-16 w-full relative z-10">
+    <motion.main 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.8, ease: [0.76, 0, 0.24, 1] }}
+      className="min-h-screen bg-ivory text-charcoal pt-32 pb-32 px-6 md:px-16 w-full relative z-10"
+    >
       <div className="max-w-[1400px] mx-auto w-full">
         
         {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 mb-20 md:mb-32 mt-12 md:mt-0">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.76, 0, 0.24, 1], delay: 0.2 }}
+          className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 mb-20 md:mb-32 mt-12 md:mt-0"
+        >
           <h1 className="text-6xl md:text-8xl lg:text-[120px] font-sans font-bold tracking-tighter leading-[0.85] uppercase">
-            Selected<br />Works
+            Archive
           </h1>
           
           {/* Filters */}
-          <div className="flex flex-wrap gap-6 md:gap-8 text-xs md:text-sm font-sans uppercase tracking-widest">
+          <div className="flex flex-wrap gap-6 md:gap-8 text-xs md:text-sm font-sans uppercase tracking-widest pb-4">
             {categories.map((cat) => (
               <button
                 key={cat}
@@ -89,28 +100,27 @@ export default function WorksGallery() {
               </button>
             ))}
           </div>
-        </div>
+        </motion.div>
 
-        {/* Masonry-style Grid */}
-        <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 lg:gap-x-12 gap-y-16 md:gap-y-24">
+        {/* Clean Standard Grid */}
+        <motion.div 
+          layout 
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 lg:gap-x-12 gap-y-16 md:gap-y-24"
+        >
           <AnimatePresence mode="popLayout">
             {filteredProjects.map((project, index) => (
               <motion.div
                 layout
-                initial={{ opacity: 0, scale: 0.8, y: 80, filter: "blur(10px)" }}
-                animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0, scale: 0.8, y: -80, filter: "blur(10px)" }}
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 transition={{ 
-                  type: "spring", 
-                  stiffness: 200, 
-                  damping: 25,
+                  duration: 0.5,
+                  ease: [0.25, 1, 0.5, 1], // Very smooth, non-bouncy ease
                   delay: index * 0.05 
                 }}
                 key={project.id}
-                // Create a staggered masonry look on desktop
-                className={`group flex flex-col cursor-pointer ${
-                  index % 3 === 1 ? 'lg:mt-24' : index % 3 === 2 ? 'lg:mt-48' : ''
-                }`}
+                className="group flex flex-col cursor-pointer"
                 data-cursor="hover"
               >
                 <Link href={`/work/${project.slug}`}>
@@ -137,6 +147,6 @@ export default function WorksGallery() {
           </AnimatePresence>
         </motion.div>
       </div>
-    </main>
+    </motion.main>
   );
 }
