@@ -60,12 +60,12 @@ export default function WorksGallery() {
     : allProjects.filter(p => p.category === activeCategory);
 
   return (
-    <main className="min-h-screen bg-ivory text-charcoal pt-32 pb-24 px-6 md:px-16 w-full relative z-10">
-      <div className="max-w-7xl mx-auto w-full">
+    <main className="min-h-screen bg-ivory text-charcoal pt-32 pb-32 px-6 md:px-16 w-full relative z-10">
+      <div className="max-w-[1400px] mx-auto w-full">
         
         {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 mb-16 md:mb-24 mt-12 md:mt-0">
-          <h1 className="text-5xl md:text-7xl lg:text-[100px] font-serif tracking-tight leading-[0.9]">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 mb-20 md:mb-32 mt-12 md:mt-0">
+          <h1 className="text-6xl md:text-8xl lg:text-[120px] font-sans font-bold tracking-tighter leading-[0.85] uppercase">
             Selected<br />Works
           </h1>
           
@@ -75,14 +75,15 @@ export default function WorksGallery() {
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`relative transition-colors duration-300 ${activeCategory === cat ? 'text-charcoal font-bold' : 'text-graphite hover:text-charcoal font-normal'}`}
+                className={`relative transition-colors duration-300 py-2 ${activeCategory === cat ? 'text-charcoal font-bold' : 'text-graphite hover:text-charcoal font-normal'}`}
                 data-cursor="hover"
               >
                 {cat}
                 {activeCategory === cat && (
                   <motion.div 
                     layoutId="underline"
-                    className="absolute left-0 right-0 h-[1.5px] bg-charcoal -bottom-2"
+                    className="absolute left-0 right-0 h-[2px] bg-charcoal bottom-0"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   />
                 )}
               </button>
@@ -90,35 +91,43 @@ export default function WorksGallery() {
           </div>
         </div>
 
-        {/* Grid */}
-        <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 md:gap-x-12 gap-y-16 md:gap-y-24">
+        {/* Masonry-style Grid */}
+        <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 lg:gap-x-12 gap-y-16 md:gap-y-24">
           <AnimatePresence mode="popLayout">
-            {filteredProjects.map((project) => (
+            {filteredProjects.map((project, index) => (
               <motion.div
                 layout
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                transition={{ duration: 0.5, ease: [0.76, 0, 0.24, 1] }}
+                initial={{ opacity: 0, scale: 0.8, y: 80, filter: "blur(10px)" }}
+                animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, scale: 0.8, y: -80, filter: "blur(10px)" }}
+                transition={{ 
+                  type: "spring", 
+                  stiffness: 200, 
+                  damping: 25,
+                  delay: index * 0.05 
+                }}
                 key={project.id}
-                className="group flex flex-col cursor-pointer"
+                // Create a staggered masonry look on desktop
+                className={`group flex flex-col cursor-pointer ${
+                  index % 3 === 1 ? 'lg:mt-24' : index % 3 === 2 ? 'lg:mt-48' : ''
+                }`}
                 data-cursor="hover"
               >
                 <Link href={`/work/${project.slug}`}>
-                  <div className="relative w-full aspect-[4/5] overflow-hidden rounded-md bg-charcoal/5">
+                  <div className="relative w-full aspect-[4/5] overflow-hidden bg-charcoal/5">
                     <Image
                       src={project.image}
                       alt={project.title}
                       fill
-                      className="object-cover scale-110 transition-transform duration-700 group-hover:scale-100"
+                      className="object-cover scale-110 transition-transform duration-[1.5s] ease-[cubic-bezier(0.19,1,0.22,1)] group-hover:scale-100"
                       sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
                   </div>
-                  <div className="mt-5 md:mt-6">
-                    <h3 className="text-xl md:text-2xl font-serif text-charcoal tracking-tight">
+                  <div className="mt-6 md:mt-8 flex flex-col">
+                    <h3 className="text-2xl md:text-3xl font-sans font-bold tracking-tight text-charcoal group-hover:text-bronze transition-colors duration-300">
                       {project.title}
                     </h3>
-                    <p className="text-sm font-sans text-graphite uppercase tracking-widest mt-2 md:mt-3">
+                    <p className="text-xs font-sans text-graphite uppercase tracking-widest mt-2 md:mt-3 font-semibold">
                       {project.category}
                     </p>
                   </div>
