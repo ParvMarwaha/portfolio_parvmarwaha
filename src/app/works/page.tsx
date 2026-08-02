@@ -55,6 +55,11 @@ const categories = ["All", "Experience Design", "Visual Design", "Photography"];
 export default function WorksGallery() {
   const [activeCategory, setActiveCategory] = useState("All");
 
+  // Force scroll to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const filteredProjects = activeCategory === "All" 
     ? allProjects 
     : allProjects.filter(p => p.category === activeCategory);

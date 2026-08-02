@@ -11,31 +11,35 @@ export default function Philosophy() {
     const el = containerRef.current;
     if (!el) return;
 
-    // Text Reveal Animation
-    gsap.fromTo(
-      textRefs.current,
-      { opacity: 0.1, y: 15 },
-      {
-        opacity: 1,
-        y: 0,
-        stagger: 0.1,
-        ease: "none",
-        scrollTrigger: {
-          trigger: el,
-          start: "top 60%",
-          end: "center 40%",
-          scrub: true,
-        },
-      }
-    );
+    const ctx = gsap.context(() => {
+      // Text Reveal Animation
+      gsap.fromTo(
+        textRefs.current,
+        { opacity: 0.1, y: 15 },
+        {
+          opacity: 1,
+          y: 0,
+          stagger: 0.1,
+          ease: "none",
+          scrollTrigger: {
+            trigger: el,
+            start: "top 60%",
+            end: "center 40%",
+            scrub: true,
+          },
+        }
+      );
 
-    // Pin the section to allow the next section to overlap
-    ScrollTrigger.create({
-      trigger: el,
-      start: "top top",
-      pin: true,
-      pinSpacing: false,
+      // Pin the section to allow the next section to overlap
+      ScrollTrigger.create({
+        trigger: el,
+        start: "top top",
+        pin: true,
+        pinSpacing: false,
+      });
     });
+
+    return () => ctx.revert();
   }, []);
 
   const paragraph = 
