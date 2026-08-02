@@ -6,12 +6,14 @@ import { gsap } from "@/utils/gsap";
 export default function CustomCursor() {
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
-  
-  const [isVisible, setIsVisible] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isMounted) return;
     
     // Only run on non-touch devices
     if (window.matchMedia("(pointer: coarse)").matches) return;
@@ -24,8 +26,12 @@ export default function CustomCursor() {
     const setDotX = gsap.quickSetter(dot, "x", "px");
     const setDotY = gsap.quickSetter(dot, "y", "px");
     
+    // Start completely invisible until the mouse physically moves
+    gsap.set([dot, ring], { opacity: 0 });
+
     const mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
     const ringPos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+    let hasMoved = false;
 
     const updateMouse = (e: MouseEvent) => {
       mouse.x = e.clientX;
@@ -35,20 +41,30 @@ export default function CustomCursor() {
       setDotX(mouse.x);
       setDotY(mouse.y);
       
-      if (!isVisible) setIsVisible(true);
+      if (!hasMoved) {
+        hasMoved = true;
+        // Snap the ring to the first position immediately
+        ringPos.x = mouse.x;
+        ringPos.y = mouse.y;
+        gsap.set(ring, { x: ringPos.x, y: ringPos.y });
+        // Fade in smoothly without triggering React re-renders
+        gsap.to([dot, ring], { opacity: 1, duration: 0.3 });
+      }
     };
 
-    // Smooth trailing animation for the ring
-    const ticker = gsap.ticker.add(() => {
+    const tickerCallback = () => {
+      if (!hasMoved) return;
       // Lerp for smooth trailing (adjustable speed)
-      const dt = 1.0 - Math.pow(1.0 - 0.2, gsap.ticker.deltaRatio()); 
       ringPos.x += (mouse.x - ringPos.x) * 0.2;
       ringPos.y += (mouse.y - ringPos.y) * 0.2;
       
       gsap.set(ring, { x: ringPos.x, y: ringPos.y });
-    });
+    };
+    
+    gsap.ticker.add(tickerCallback);
 
     const handleMouseOver = (e: MouseEvent) => {
+      if (!hasMoved) return;
       const target = e.target as HTMLElement;
       if (
         target.tagName.toLowerCase() === "a" ||
@@ -83,9 +99,9 @@ export default function CustomCursor() {
     return () => {
       window.removeEventListener("mousemove", updateMouse);
       window.removeEventListener("mouseover", handleMouseOver);
-      gsap.ticker.remove(ticker);
+      gsap.ticker.remove(tickerCallback);
     };
-  }, [isVisible]);
+  }, [isMounted]);
 
   if (!isMounted) return null;
 
@@ -99,14 +115,12 @@ export default function CustomCursor() {
       {/* Outer trailing ring */}
       <div
         ref={ringRef}
-        className={`fixed top-0 left-0 w-8 h-8 -ml-4 -mt-4 rounded-full border border-white mix-blend-difference pointer-events-none z-[9999] transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
-        style={{ willChange: "transform, width, height" }}
+        className="fixed top-0 left-0 w-8 h-8 -ml-4 -mt-4 rounded-full border border-white mix-blend-difference pointer-events-none z-[9999]"
       />
       {/* Inner accurate dot */}
       <div
         ref={dotRef}
-        className={`fixed top-0 left-0 w-2 h-2 -ml-1 -mt-1 bg-white mix-blend-difference rounded-full pointer-events-none z-[9999] transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
-        style={{ willChange: "transform" }}
+        className="fixed top-0 left-0 w-2 h-2 -ml-1 -mt-1 bg-white mix-blend-difference rounded-full pointer-events-none z-[9999]"
       />
     </>
   );
