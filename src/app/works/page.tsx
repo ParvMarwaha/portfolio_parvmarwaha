@@ -76,8 +76,8 @@ export default function WorksGallery() {
           transition={{ duration: 0.8, ease: [0.76, 0, 0.24, 1], delay: 0.2 }}
           className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 mb-20 md:mb-32 mt-12 md:mt-0"
         >
-          <h1 className="text-6xl md:text-8xl lg:text-[120px] font-sans font-bold tracking-tighter leading-[0.85] uppercase">
-            Archive
+          <h1 className="text-5xl md:text-7xl lg:text-[100px] font-sans font-normal tracking-tight leading-[0.85] uppercase">
+            Works
           </h1>
           
           {/* Filters */}
