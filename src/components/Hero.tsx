@@ -10,42 +10,47 @@ export default function Hero() {
   const imageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const tl = gsap.timeline();
+    const ctx = gsap.context(() => {
+      // Delay to wait for the Preloader (which takes ~5.9s before curtain slide)
+      const tl = gsap.timeline({ delay: 5.8 });
 
-    tl.fromTo(
-      imageRef.current,
-      { scale: 1.1, opacity: 0 },
-      { scale: 1, opacity: 1, duration: 2.5, ease: "power3.out" }
-    ).fromTo(
-      textRef.current,
-      { y: 50, opacity: 0 },
-      { y: 0, opacity: 1, duration: 1.5, ease: "power3.out" },
-      "-=1.5"
-    );
+      tl.fromTo(
+        imageRef.current,
+        { scale: 1.1, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 2.5, ease: "power3.out" }
+      ).fromTo(
+        textRef.current,
+        { y: 50, opacity: 0 },
+        { y: 0, opacity: 1, duration: 1.5, ease: "power3.out" },
+        "-=1.5"
+      );
 
-    // Parallax on image
-    gsap.to(imageRef.current, {
-      yPercent: 15,
-      ease: "none",
-      scrollTrigger: {
-        trigger: containerRef.current,
-        start: "top top",
-        end: "bottom top",
-        scrub: true,
-      },
-    });
+      // Parallax on image
+      gsap.to(imageRef.current, {
+        yPercent: 15,
+        ease: "none",
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "top top",
+          end: "bottom top",
+          scrub: true,
+        },
+      });
 
-    // Parallax on text (moves at a different speed than the image)
-    gsap.to(textRef.current, {
-      yPercent: 40,
-      ease: "none",
-      scrollTrigger: {
-        trigger: containerRef.current,
-        start: "top top",
-        end: "bottom top",
-        scrub: true,
-      },
-    });
+      // Parallax on text
+      gsap.to(textRef.current, {
+        yPercent: 40,
+        ease: "none",
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "top top",
+          end: "bottom top",
+          scrub: true,
+        },
+      });
+    }, containerRef);
+
+    return () => ctx.revert();
   }, []);
 
   return (

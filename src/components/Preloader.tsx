@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { gsap } from "@/utils/gsap";
+import { gsap, ScrollTrigger } from "@/utils/gsap";
 
 export default function Preloader() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -41,6 +41,11 @@ export default function Preloader() {
           document.body.style.overflow = "";
           document.body.style.height = "";
           window.removeEventListener("mousemove", onMouseMove);
+          
+          // Refresh ScrollTrigger to recalculate layout dimensions now that body is unconstrained
+          setTimeout(() => {
+            ScrollTrigger.refresh();
+          }, 100);
         }
       });
 
