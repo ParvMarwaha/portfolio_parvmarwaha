@@ -17,6 +17,12 @@
     color: var(--color-charcoal);
   }
 
+  @media (pointer: fine) {
+    body, a, button, [data-cursor="hover"] {
+      cursor: none !important;
+    }
+  }
+
   /* Lenis smooth scrolling recommendations */
   html.lenis, html.lenis body {
     height: auto;

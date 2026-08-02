@@ -1,21 +1,52 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { gsap } from "@/utils/gsap";
 
 export default function CustomCursor() {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [isHovered, setIsHovered] = useState(false);
+  const dotRef = useRef<HTMLDivElement>(null);
+  const ringRef = useRef<HTMLDivElement>(null);
+  
   const [isVisible, setIsVisible] = useState(false);
-
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
-    const updateMousePosition = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
+    
+    // Only run on non-touch devices
+    if (window.matchMedia("(pointer: coarse)").matches) return;
+
+    const dot = dotRef.current;
+    const ring = ringRef.current;
+    if (!dot || !ring) return;
+
+    // Use quickSetters for 0-latency hardware-accelerated tracking
+    const setDotX = gsap.quickSetter(dot, "x", "px");
+    const setDotY = gsap.quickSetter(dot, "y", "px");
+    
+    const mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+    const ringPos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+
+    const updateMouse = (e: MouseEvent) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      
+      // Instant update for the tiny dot (perfect accuracy)
+      setDotX(mouse.x);
+      setDotY(mouse.y);
+      
       if (!isVisible) setIsVisible(true);
     };
+
+    // Smooth trailing animation for the ring
+    const ticker = gsap.ticker.add(() => {
+      // Lerp for smooth trailing (adjustable speed)
+      const dt = 1.0 - Math.pow(1.0 - 0.2, gsap.ticker.deltaRatio()); 
+      ringPos.x += (mouse.x - ringPos.x) * 0.2;
+      ringPos.y += (mouse.y - ringPos.y) * 0.2;
+      
+      gsap.set(ring, { x: ringPos.x, y: ringPos.y });
+    });
 
     const handleMouseOver = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -26,53 +57,59 @@ export default function CustomCursor() {
         target.closest("button") ||
         target.dataset.cursor === "hover"
       ) {
-        setIsHovered(true);
+        gsap.to(dot, { scale: 0, opacity: 0, duration: 0.3 });
+        gsap.to(ring, { 
+          scale: 2.5, 
+          backgroundColor: "#F7F6F2", // Ivory
+          mixBlendMode: "difference",
+          borderWidth: "0px",
+          duration: 0.3,
+          ease: "back.out(1.5)"
+        });
       } else {
-        setIsHovered(false);
+        gsap.to(dot, { scale: 1, opacity: 1, duration: 0.3 });
+        gsap.to(ring, { 
+          scale: 1, 
+          backgroundColor: "transparent", 
+          mixBlendMode: "normal",
+          borderWidth: "1px",
+          duration: 0.3,
+          ease: "power2.out"
+        });
       }
     };
 
-    window.addEventListener("mousemove", updateMousePosition);
+    window.addEventListener("mousemove", updateMouse);
     window.addEventListener("mouseover", handleMouseOver);
 
     return () => {
-      window.removeEventListener("mousemove", updateMousePosition);
+      window.removeEventListener("mousemove", updateMouse);
       window.removeEventListener("mouseover", handleMouseOver);
+      gsap.ticker.remove(ticker);
     };
   }, [isVisible]);
 
   if (!isMounted) return null;
 
-  const variants = {
-    default: {
-      x: mousePosition.x - 6,
-      y: mousePosition.y - 6,
-      scale: 1,
-      opacity: isVisible ? 1 : 0,
-      backgroundColor: "var(--color-charcoal)",
-      mixBlendMode: "normal" as any,
-    },
-    hover: {
-      x: mousePosition.x - 24,
-      y: mousePosition.y - 24,
-      scale: 1.5,
-      backgroundColor: "transparent",
-      border: "1px solid var(--color-bronze)",
-      opacity: isVisible ? 1 : 0,
-      mixBlendMode: "difference" as any,
-    },
-  };
+  // Hide cursor completely on touch devices
+  if (typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches) {
+    return null;
+  }
 
   return (
-    <motion.div
-      className="fixed top-0 left-0 w-3 h-3 rounded-full pointer-events-none z-50 transition-colors duration-300"
-      variants={variants}
-      animate={isHovered ? "hover" : "default"}
-      transition={{
-        type: "tween",
-        ease: "backOut",
-        duration: 0.15,
-      }}
-    />
+    <>
+      {/* Outer trailing ring */}
+      <div
+        ref={ringRef}
+        className={`fixed top-0 left-0 w-8 h-8 -ml-4 -mt-4 rounded-full border border-charcoal/50 pointer-events-none z-[9999] transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+        style={{ willChange: "transform, width, height" }}
+      />
+      {/* Inner accurate dot */}
+      <div
+        ref={dotRef}
+        className={`fixed top-0 left-0 w-2 h-2 -ml-1 -mt-1 bg-charcoal rounded-full pointer-events-none z-[9999] transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+        style={{ willChange: "transform" }}
+      />
+    </>
   );
 }

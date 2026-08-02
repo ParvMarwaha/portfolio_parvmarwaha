@@ -108,7 +108,17 @@ export default function Navigation() {
       </div>
 
       <div className="fixed top-8 left-6 md:left-16 z-[60] mix-blend-difference text-ivory">
-        <Link href="/" className="text-xl font-bold tracking-tighter hover:opacity-70 transition-opacity" data-cursor="hover">
+        <Link 
+          href="/" 
+          onClick={(e) => {
+            if (window.location.pathname === "/") {
+              e.preventDefault();
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          }}
+          className="text-xl font-bold tracking-tighter hover:opacity-70 transition-opacity" 
+          data-cursor="hover"
+        >
           Parv Marwaha.
         </Link>
       </div>
