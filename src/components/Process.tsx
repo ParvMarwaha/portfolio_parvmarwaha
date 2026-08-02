@@ -22,7 +22,7 @@ export default function Process() {
     
     gsap.fromTo(
       words,
-      { opacity: 0.2, x: -50 },
+      { opacity: 0.1, x: -50 },
       {
         opacity: 1,
         x: 0,
@@ -30,9 +30,9 @@ export default function Process() {
         ease: "power2.out",
         scrollTrigger: {
           trigger: el,
-          start: "top 75%",
-          end: "bottom 25%",
-          scrub: 1.5,
+          start: "top 85%",
+          end: "bottom 15%",
+          scrub: true,
         },
       }
     );

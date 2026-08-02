@@ -45,9 +45,9 @@ export default function Footer() {
         ease: "power2.out",
         scrollTrigger: {
           trigger: containerRef.current,
-          start: "top 80%", 
-          end: "bottom 40%",
-          scrub: 1.5,
+          start: "top 90%", 
+          end: "bottom 30%",
+          scrub: true,
         },
       }
     );
