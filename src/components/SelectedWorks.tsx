@@ -123,9 +123,9 @@ export default function SelectedWorks() {
             </div>
           ))}
           
-          <div className="absolute inset-0 bg-charcoal/30 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-700 z-50 flex items-center justify-center">
-            <span className="text-ivory text-2xl md:text-4xl font-serif tracking-tight scale-95 group-hover:scale-100 transition-transform duration-700">
-              View all works
+          <div className="absolute inset-0 bg-charcoal opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-50 flex items-center justify-center overflow-hidden">
+            <span className="text-ivory text-5xl md:text-7xl lg:text-8xl font-sans font-bold tracking-tighter uppercase translate-y-12 group-hover:translate-y-0 transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)]">
+              View Archive
             </span>
           </div>
         </div>
