@@ -11,7 +11,13 @@ export default function Preloader() {
   const [isFinished, setIsFinished] = useState(false);
 
   useEffect(() => {
-    // Prevent scrolling during preloader
+    // Force browser to not restore previous scroll position
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+    
+    // Prevent scrolling during preloader and force scroll to top
+    window.scrollTo(0, 0);
     document.body.style.overflow = "hidden";
     document.body.style.height = "100vh";
     
@@ -40,6 +46,7 @@ export default function Preloader() {
           setIsFinished(true);
           document.body.style.overflow = "";
           document.body.style.height = "";
+          window.scrollTo(0, 0); // Force top again just to be safe
           window.removeEventListener("mousemove", onMouseMove);
           
           // Refresh ScrollTrigger to recalculate layout dimensions now that body is unconstrained
@@ -126,7 +133,7 @@ export default function Preloader() {
     >
       <div 
         ref={counterRef} 
-        className="absolute text-[22vw] md:text-[15vw] font-sans font-bold tracking-tighter pointer-events-none"
+        className="absolute text-[22vw] md:text-[15vw] font-sans font-normal tracking-tighter pointer-events-none"
         style={{ willChange: "transform, opacity, scale" }}
       >
         0%
