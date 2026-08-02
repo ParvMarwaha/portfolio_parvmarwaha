@@ -93,16 +93,26 @@ export default function Navigation() {
       <div className="fixed top-8 right-6 md:right-16 z-[60] mix-blend-difference text-ivory">
         <button 
           onClick={() => setIsOpen(!isOpen)} 
-          className="h-8 w-16 overflow-hidden relative group"
+          className="h-8 w-8 overflow-hidden relative group"
           data-cursor="hover"
         >
           <motion.div
             animate={{ y: isOpen ? -32 : 0 }}
             transition={{ duration: 0.5, ease: [0.76, 0, 0.24, 1] }}
-            className="flex flex-col w-full"
+            className="flex flex-col w-full items-center"
           >
-            <span className="h-8 w-full flex items-center justify-end font-bold tracking-widest text-sm uppercase group-hover:opacity-70 transition-opacity">Menu</span>
-            <span className="h-8 w-full flex items-center justify-end font-bold tracking-widest text-sm uppercase group-hover:opacity-70 transition-opacity">Close</span>
+            <span className="h-8 w-full flex items-center justify-center group-hover:opacity-70 transition-opacity">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M4 9H20" strokeLinecap="square"/>
+                <path d="M4 15H20" strokeLinecap="square"/>
+              </svg>
+            </span>
+            <span className="h-8 w-full flex items-center justify-center group-hover:opacity-70 transition-opacity">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M6 18L18 6" strokeLinecap="square"/>
+                <path d="M6 6L18 18" strokeLinecap="square"/>
+              </svg>
+            </span>
           </motion.div>
         </button>
       </div>
