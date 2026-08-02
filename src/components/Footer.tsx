@@ -41,13 +41,13 @@ export default function Footer() {
         y: 0,
         filter: "blur(0px)",
         rotateX: 0,
-        stagger: 0.1,
+        duration: 1.5,
+        stagger: 0.08,
         ease: "power3.out",
         scrollTrigger: {
           trigger: containerRef.current,
-          start: "top 60%", // Start earlier
-          end: "bottom bottom", // Must finish exactly at bottom of page
-          scrub: true,
+          start: "top 70%",
+          toggleActions: "play none none reverse",
         },
       }
     );
