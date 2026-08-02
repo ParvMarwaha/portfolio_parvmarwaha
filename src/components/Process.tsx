@@ -42,7 +42,7 @@ export default function Process() {
     <section className="w-full bg-charcoal text-ivory py-48 px-6 md:px-16 overflow-hidden" ref={containerRef}>
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-16 md:gap-32 items-start md:items-center">
         <div className="w-full md:w-1/3">
-          <p className="text-lg font-sans text-graphite/80 max-w-sm">
+          <p className="text-lg font-sans text-ivory/60 max-w-sm">
             Moving beyond aesthetics to build meaning. A systematic approach to shaping atmosphere and emotion.
           </p>
         </div>

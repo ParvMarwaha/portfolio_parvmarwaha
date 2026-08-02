@@ -28,10 +28,10 @@ export default function Studio() {
         
         <div 
           ref={imageRef} 
-          className="w-full lg:w-1/2 relative aspect-[3/4] overflow-hidden"
+          className="w-full lg:w-5/12 relative aspect-[4/5] overflow-hidden rounded-sm"
         >
           <Image
-            src="/images/studio.png"
+            src="/images/profile-photo.png"
             alt="Creative Director Portrait"
             fill
             className="object-cover scale-110 grayscale contrast-125 brightness-95"
