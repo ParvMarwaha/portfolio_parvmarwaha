@@ -18,7 +18,7 @@ function AnimatedLink({ name, href, onMouseEnter, onMouseLeave, onClick }: any) 
   return (
     <Link 
       href={href} 
-      className="relative flex overflow-hidden group text-6xl md:text-8xl lg:text-[10vw] font-bold uppercase leading-[0.85] tracking-tighter"
+      className="relative flex overflow-hidden group text-6xl md:text-8xl lg:text-[10vw] font-normal uppercase leading-[0.85] tracking-tight"
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onClick={onClick}
@@ -93,16 +93,16 @@ export default function Navigation() {
       <div className="fixed top-8 right-8 z-[60] mix-blend-difference text-ivory">
         <button 
           onClick={() => setIsOpen(!isOpen)} 
-          className="h-8 overflow-hidden flex items-center justify-center group"
+          className="h-8 w-20 overflow-hidden flex items-center justify-center group"
           data-cursor="hover"
         >
           <motion.div
             animate={{ y: isOpen ? -32 : 0 }}
             transition={{ duration: 0.5, ease: [0.76, 0, 0.24, 1] }}
-            className="relative flex flex-col items-center justify-center"
+            className="relative flex flex-col items-center justify-start w-full"
           >
-            <span className="h-8 flex items-center justify-center font-bold tracking-widest text-sm uppercase group-hover:opacity-70 transition-opacity">Menu</span>
-            <span className="h-8 flex items-center justify-center font-bold tracking-widest text-sm uppercase absolute top-8 group-hover:opacity-70 transition-opacity">Close</span>
+            <span className="h-8 w-full flex items-center justify-end font-bold tracking-widest text-sm uppercase group-hover:opacity-70 transition-opacity">Menu</span>
+            <span className="h-8 w-full flex items-center justify-end font-bold tracking-widest text-sm uppercase group-hover:opacity-70 transition-opacity">Close</span>
           </motion.div>
         </button>
       </div>
