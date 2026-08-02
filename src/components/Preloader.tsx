@@ -18,7 +18,6 @@ export default function Preloader() {
     
     // Prevent scrolling during preloader
     document.body.style.overflow = "hidden";
-    document.body.style.height = "100vh";
     
     // Aggressively lock scroll to top 60 times a second to defeat Next.js scroll restoration
     const lockScroll = () => {
@@ -59,7 +58,6 @@ export default function Preloader() {
         onComplete: () => {
           setIsFinished(true);
           document.body.style.overflow = "";
-          document.body.style.height = "";
           
           gsap.ticker.remove(lockScroll);
           if (typeof window !== "undefined" && (window as any).lenis) {
@@ -70,11 +68,6 @@ export default function Preloader() {
           window.removeEventListener("mousemove", onMouseMove);
           window.removeEventListener("wheel", preventScroll);
           window.removeEventListener("touchmove", preventScroll);
-          
-          // Refresh ScrollTrigger to recalculate layout dimensions now that body is unconstrained
-          setTimeout(() => {
-            ScrollTrigger.refresh();
-          }, 100);
         }
       });
 
