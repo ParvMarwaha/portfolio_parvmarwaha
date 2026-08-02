@@ -81,19 +81,19 @@ export default function WorksGallery() {
           </h1>
           
           {/* Filters */}
-          <div className="flex flex-wrap gap-6 md:gap-8 text-xs md:text-sm font-sans uppercase tracking-widest pb-4">
+          <div className="flex flex-wrap gap-6 md:gap-8 text-base md:text-lg font-serif tracking-tight pb-4">
             {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`relative transition-colors duration-300 py-2 ${activeCategory === cat ? 'text-charcoal font-bold' : 'text-graphite hover:text-charcoal font-normal'}`}
+                className={`relative transition-colors duration-300 py-2 ${activeCategory === cat ? 'text-charcoal font-semibold' : 'text-graphite hover:text-charcoal font-normal'}`}
                 data-cursor="hover"
               >
                 {cat}
                 {activeCategory === cat && (
                   <motion.div 
                     layoutId="underline"
-                    className="absolute left-0 right-0 h-[2px] bg-charcoal bottom-0"
+                    className="absolute left-0 right-0 h-[1.5px] bg-charcoal bottom-0"
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   />
                 )}
