@@ -45,8 +45,8 @@ export default function Footer() {
         ease: "power3.out",
         scrollTrigger: {
           trigger: containerRef.current,
-          start: "top 40%", // Start when footer is nicely visible
-          end: "bottom 90%",
+          start: "top 60%", // Start earlier
+          end: "bottom bottom", // Must finish exactly at bottom of page
           scrub: true,
         },
       }
@@ -54,24 +54,24 @@ export default function Footer() {
   }, []);
 
   return (
-    <div ref={containerRef} className="relative w-full h-screen overflow-hidden bg-charcoal z-0">
-      <footer id="contact" ref={footerRef} className="w-full h-screen bg-charcoal text-ivory py-32 px-6 md:px-16 flex flex-col justify-between will-change-transform">
-        <div className="flex-1 flex items-center justify-center pt-24 pb-32" style={{ perspective: "1000px" }}>
+    <div ref={containerRef} className="relative w-full overflow-hidden bg-charcoal z-0">
+      <footer id="contact" ref={footerRef} className="w-full min-h-screen bg-charcoal text-ivory py-16 md:py-24 px-6 md:px-16 flex flex-col justify-between will-change-transform">
+        <div className="flex-1 flex items-center justify-center pt-8 pb-16" style={{ perspective: "1000px" }}>
           <h2 
             ref={textRef}
-            className="text-4xl md:text-6xl lg:text-[80px] font-serif text-center leading-[1.1] max-w-6xl text-balance"
+            className="text-4xl md:text-6xl lg:text-[72px] font-serif text-center leading-[1.1] max-w-6xl text-balance"
           >
             {words.map((word, index) => (
-              <span key={index} className="footer-word inline-block opacity-0 will-change-transform">
-                {word}{" "}
+              <span key={index} className="footer-word inline-block opacity-0 will-change-transform mr-[0.25em]">
+                {word}
               </span>
             ))}
           </h2>
         </div>
 
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-16 md:gap-0 border-t border-ivory/20 pt-12">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-12 md:gap-0 border-t border-ivory/20 pt-10">
           <div className="flex flex-col gap-2">
-            <p className="text-sm font-sans uppercase tracking-widest text-bronze mb-4">
+            <p className="text-sm font-sans uppercase tracking-widest text-bronze mb-2">
               Inquiries
             </p>
             <a 
@@ -80,6 +80,13 @@ export default function Footer() {
               data-cursor="hover"
             >
               parvmarwaha1@gmail.com
+            </a>
+            <a 
+              href="tel:9625432705" 
+              className="text-2xl md:text-3xl font-serif hover:text-bronze transition-colors tracking-tight"
+              data-cursor="hover"
+            >
+              +91 9625432705
             </a>
           </div>
 
