@@ -60,8 +60,7 @@ export default function CustomCursor() {
         gsap.to(dot, { scale: 0, opacity: 0, duration: 0.3 });
         gsap.to(ring, { 
           scale: 2.5, 
-          backgroundColor: "#F7F6F2", // Ivory
-          mixBlendMode: "difference",
+          backgroundColor: "#ffffff",
           borderWidth: "0px",
           duration: 0.3,
           ease: "back.out(1.5)"
@@ -71,7 +70,6 @@ export default function CustomCursor() {
         gsap.to(ring, { 
           scale: 1, 
           backgroundColor: "transparent", 
-          mixBlendMode: "normal",
           borderWidth: "1px",
           duration: 0.3,
           ease: "power2.out"
@@ -101,13 +99,13 @@ export default function CustomCursor() {
       {/* Outer trailing ring */}
       <div
         ref={ringRef}
-        className={`fixed top-0 left-0 w-8 h-8 -ml-4 -mt-4 rounded-full border border-charcoal/50 pointer-events-none z-[9999] transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+        className={`fixed top-0 left-0 w-8 h-8 -ml-4 -mt-4 rounded-full border border-white mix-blend-difference pointer-events-none z-[9999] transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
         style={{ willChange: "transform, width, height" }}
       />
       {/* Inner accurate dot */}
       <div
         ref={dotRef}
-        className={`fixed top-0 left-0 w-2 h-2 -ml-1 -mt-1 bg-charcoal rounded-full pointer-events-none z-[9999] transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+        className={`fixed top-0 left-0 w-2 h-2 -ml-1 -mt-1 bg-white mix-blend-difference rounded-full pointer-events-none z-[9999] transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
         style={{ willChange: "transform" }}
       />
     </>
