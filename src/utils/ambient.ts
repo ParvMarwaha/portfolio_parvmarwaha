@@ -127,6 +127,35 @@ const fade = (to: number, seconds: number) => {
   master.gain.linearRampToValueAtTime(to, ctx.currentTime + seconds);
 };
 
+/** Tiny interface sounds on the same switch as the music: a soft blip on hover, a tap on press. */
+export function uiSound(kind: "hover" | "click") {
+  if (!playing || !ctx || !master || ctx.state !== "running") return;
+  const t = ctx.currentTime;
+  const o = ctx.createOscillator();
+  const g = ctx.createGain();
+  if (kind === "hover") {
+    // A note from the key's scale, so moving across buttons plays a little tune.
+    o.type = "sine";
+    o.frequency.value = hz(PLUCKS[Math.floor(Math.random() * 6)]) * 4;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.035, t + 0.006);
+    g.gain.exponentialRampToValueAtTime(0.0006, t + 0.16);
+    o.stop(t + 0.18);
+  } else {
+    // A short, round tap that drops in pitch.
+    o.type = "triangle";
+    o.frequency.setValueAtTime(hz(12) * 4, t);
+    o.frequency.exponentialRampToValueAtTime(hz(0) * 2, t + 0.09);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.12, t + 0.004);
+    g.gain.exponentialRampToValueAtTime(0.0006, t + 0.14);
+    o.stop(t + 0.16);
+  }
+  o.connect(g);
+  g.connect(master);
+  o.start(t);
+}
+
 export async function startAmbient() {
   if (playing) return;
   playing = true;
@@ -200,6 +229,28 @@ export function followTheme() {
     pendingKey = KEYS[h % KEYS.length];
   };
   window.addEventListener("pm:theme", onTheme);
+
+  // Interface sounds, for anything you can press. Only mice get the hover blip; every pointer gets the tap.
+  const INTERACTIVE = 'a[href],button,[role="button"],summary,label[for]';
+  const pressable = (el: EventTarget | null) => {
+    const hit = (el as HTMLElement | null)?.closest?.<HTMLElement>(INTERACTIVE) ?? null;
+    return hit && !hit.matches(":disabled,[aria-disabled='true']") ? hit : null;
+  };
+  let lastHover = 0;
+  const onOver = (e: PointerEvent) => {
+    if (e.pointerType !== "mouse" || document.body.dataset.panning) return;
+    const el = pressable(e.target);
+    if (!el || el === pressable(e.relatedTarget)) return;
+    const now = performance.now();
+    if (now - lastHover < 70) return;
+    lastHover = now;
+    uiSound("hover");
+  };
+  const onDown = (e: PointerEvent) => {
+    if (e.button === 0 && pressable(e.target)) uiSound("click");
+  };
+  document.addEventListener("pointerover", onOver);
+  document.addEventListener("pointerdown", onDown, true);
   // A tab nobody is looking at should be quiet.
   const onVisible = () => {
     if (!ctx || !playing) return;
@@ -209,6 +260,8 @@ export function followTheme() {
   document.addEventListener("visibilitychange", onVisible);
   return () => {
     window.removeEventListener("pm:theme", onTheme);
+    document.removeEventListener("pointerover", onOver);
+    document.removeEventListener("pointerdown", onDown, true);
     document.removeEventListener("visibilitychange", onVisible);
   };
 }
