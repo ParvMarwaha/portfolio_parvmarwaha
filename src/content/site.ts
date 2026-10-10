@@ -16,12 +16,18 @@ export const site = {
   availability: "Available for freelance & full-time",
   coverLine: "designing stuff that actually ships.",
   intro: ["I'm Parv, a ", "designer", " from India. I design interfaces, brands and motion, and I can build and ship them too."],
+  // The tools I work in (shown on Home and About), and a note on how AI fits in. DRAFT wording, rewrite freely.
+  tools: ["Figma", "After Effects", "Claude", "Antigravity", "Illustrator"],
+  aiNote: {
+    short: "AI is part of how I work: I use it to make products more engaging, user-friendly and interactive.",
+    long: "I actively try to bring AI into my practice. Claude and Antigravity sit next to Figma, After Effects and Illustrator, and I use them to get to outputs that make the end product more engaging, more user-friendly and more interactive for the person using it.",
+  },
   // DRAFT: the About page. Written from what the projects show; rewrite in your own voice.
   about: {
     lead: "I'm Parv Marwaha, a designer from India. I like making things that look considered, and I can build and ship them too.",
     paragraphs: [
       "Most of my work so far is design: product case studies, a mobile app prototype, brand identities, motion graphics and illustration. All of it is on the home page.",
-      "I work in Figma, Illustrator, Photoshop and After Effects, and I can build and ship what I design when a project needs it. I'm open to freelance projects and full-time roles.",
+      "I work in Figma, After Effects and Illustrator, with Claude and Antigravity alongside them. I can build and ship what I design when a project needs it. I'm open to freelance projects and full-time roles.",
     ],
     disciplines: {
       "UI/UX": "Product and app design, from research to a clickable prototype.",

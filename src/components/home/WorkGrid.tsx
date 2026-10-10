@@ -138,7 +138,7 @@ export default function WorkGrid() {
 
   return (
     <section id="work" className="scroll-mt-20 px-4 pb-20 pt-20 md:px-6 md:pb-28 md:pt-32" aria-label="Selected work">
-      <div className="mx-auto max-w-[85rem]">
+      <div className="mx-auto max-w-[max(85rem,1360px)]">
         <div className="mb-10 flex flex-col gap-6 md:mb-14 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="label mb-4 text-mute">{String(projects.length).padStart(2, "0")} projects</p>

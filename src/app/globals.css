@@ -21,11 +21,18 @@
 /* The palette variables (--paper, --ink, --cobalt, ...) are written into <head> from src/content/themes.ts. */
 
 @layer base {
-  /* Everything is sized in rem, so this one rule scales the whole site. 16px up to a 1440 x 900 screen; above that
-     the page grows with the smaller of the width and the height, so a big monitor shows the same layout, just larger. */
+  /* Everything is sized in rem, so this one rule scales the whole site. The reference is a 1440 x 900 screen at 16px.
+     From 1024px wide up, the size follows the smaller of the screen's width and height: a short laptop screen (a 14-inch
+     MacBook's browser window is about 850px tall) gets a slightly smaller page, a big monitor a larger one, and the
+     layout looks the same on all of them. Below 1024px it stays 16px (tablets, phones). */
   html {
     background-color: var(--paper);
-    font-size: clamp(16px, min(1.1111vw, 1.7778svh), 34px);
+    font-size: 16px;
+  }
+  @media (min-width: 1024px) {
+    html {
+      font-size: clamp(14px, min(1.1111vw, 1.7778svh), 34px);
+    }
   }
 
   body {

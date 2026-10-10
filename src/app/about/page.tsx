@@ -5,7 +5,7 @@ import { Ph } from "@/components/ui/Placeholder";
 import SiteFooter from "@/components/SiteFooter";
 import Reveal from "@/components/ui/Reveal";
 import { site } from "@/content/site";
-import { projects, TYPES } from "@/content/projects";
+import { projects, DISCIPLINES } from "@/content/projects";
 
 export const metadata: Metadata = { title: "About" };
 
@@ -13,10 +13,6 @@ const DISCIPLINE_NAMES = { "UI/UX": "UI/UX design", Branding: "Brand identity", 
 
 // The text lives in src/content/site.ts (marked DRAFT). The portrait is a real photo; the three pictures further down are placeholders until the rest arrive.
 export default function About() {
-  const counts = new Map<string, number>();
-  for (const p of projects) for (const t of p.tools) counts.set(t, (counts.get(t) ?? 0) + 1);
-  const tools = [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([t]) => t);
-
   const facts: [string, React.ReactNode][] = [
     ["Based in", "India"],
     ["Status", site.availability],
@@ -27,7 +23,7 @@ export default function About() {
   return (
     <>
       <main className="px-4 pb-20 pt-28 md:px-6 md:pb-28 md:pt-36">
-        <div className="mx-auto max-w-[85rem]">
+        <div className="mx-auto max-w-[max(85rem,1360px)]">
         <p className="label mb-5 text-mute">About</p>
         <h1 className="text-6xl font-medium leading-[0.9] tracking-tighter md:text-[9rem]">
           Ab<em className="font-display italic text-cobalt">out</em>
@@ -72,7 +68,7 @@ export default function About() {
         <section className="mt-20 md:mt-32" aria-label="What I do">
           <p className="label mb-6 text-mute">What I do</p>
           <ul className="grid gap-x-8 gap-y-10 md:grid-cols-4">
-            {TYPES.map((t, i) => {
+            {DISCIPLINES.map((t, i) => {
               const mine = projects.filter((p) => p.type === t);
               return (
                 <li key={t} className="border-t border-ink/15 pt-4">
@@ -94,12 +90,13 @@ export default function About() {
         <section className="mt-20 md:mt-32" aria-label="Toolkit">
           <p className="label mb-6 text-mute">Toolkit</p>
           <div className="flex flex-wrap gap-2.5">
-            {tools.map((t) => (
+            {site.tools.map((t) => (
               <span key={t} className="rounded-full px-5 py-2.5 text-[0.9375rem] font-medium tracking-tight ring-1 ring-ink/20">
                 {t}
               </span>
             ))}
           </div>
+          <p className="mt-8 max-w-3xl text-xl font-medium leading-snug tracking-tight md:text-2xl">{site.aiNote.long}</p>
         </section>
 
         <section className="mt-20 md:mt-32" aria-label="In pictures">

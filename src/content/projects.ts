@@ -3,7 +3,9 @@
 // public/images/ and point `image` / `gallery` at "/images/your-file.jpg".
 // `summary` is Behance's own text where the project has one; otherwise it is a plain, factual DRAFT
 // built from the project's fields and tools. Edit freely.
-export type ProjectType = "UI/UX" | "Branding" | "Motion" | "Illustration";
+export type ProjectType = "UI/UX" | "Branding" | "Motion" | "Illustration" | "Others";
+/** The four things I do; "Others" only exists as a filter for work that fits none of them. */
+export type Discipline = Exclude<ProjectType, "Others">;
 
 export interface Person {
   name: string;
@@ -47,7 +49,7 @@ export const projects: Project[] = [
     behance: "https://www.behance.net/gallery/220123713/Sangeet-Sathi",
     accent: "#E5531C",
     title: "Sangeet Sathi",
-    type: "UI/UX",
+    type: "Branding",
     year: 2025,
     published: "February 2025",
     summary: "A product design case study about mental health in older people.",
@@ -93,7 +95,7 @@ export const projects: Project[] = [
     behance: "https://www.behance.net/gallery/240646351/A-Research-Case-Study",
     accent: "#1A3BFF",
     title: "A Research Case Study",
-    type: "UI/UX",
+    type: "Others",
     year: 2025,
     published: "December 2025",
     summary: "This research project explores usability and accessibility challenges in commonly used government application forms in India.",
@@ -211,7 +213,8 @@ export const PROJECT_LINKS: "behance" | "pages" = "behance";
 export const projectsOpenOnBehance = () => PROJECT_LINKS === "behance";
 export const projectHref = (p: Project) => (PROJECT_LINKS === "behance" ? p.behance : `/work/${p.slug}`);
 
-export const TYPES: ProjectType[] = ["UI/UX", "Branding", "Motion", "Illustration"];
+export const TYPES: ProjectType[] = ["UI/UX", "Branding", "Motion", "Illustration", "Others"];
+export const DISCIPLINES: Discipline[] = ["UI/UX", "Branding", "Motion", "Illustration"];
 
 export const pad2 = (n: number) => String(n).padStart(2, "0");
 export const numberOf = (p: Project) => pad2(projects.indexOf(p) + 1);

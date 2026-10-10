@@ -24,7 +24,7 @@ export default function Home() {
 
           {/* A small way out to the game */}
           <section className="px-4 pb-8 md:px-6 md:pb-12" aria-label="Off hours">
-            <div className="mx-auto flex max-w-[85rem] flex-col gap-4 border-y border-ink/15 py-6 md:flex-row md:items-center md:justify-between">
+            <div className="mx-auto flex max-w-[max(85rem,1360px)] flex-col gap-4 border-y border-ink/15 py-6 md:flex-row md:items-center md:justify-between">
               <p className="text-xl font-medium tracking-tight md:text-2xl">
                 Off hours: <span className="text-mute">a tiny game called Break the Grid.</span>
               </p>

@@ -231,12 +231,18 @@ function xray(): Theme {
   };
 }
 
-/** A fresh random theme: mostly plain colours, now and then a dark x-ray one or the cream Cobalt. */
-export function generateTheme(previous?: string): Theme {
-  if (previous !== COBALT_CREAM.name && Math.random() < 0.1) return COBALT_CREAM;
+/**
+ * A fresh random theme. Without `kind` it is a surprise (mostly plain, now and then x-ray). The colour button passes
+ * `kind` so that its presses alternate: a plain palette, then an x-ray one, then plain again.
+ */
+export function generateTheme(previous?: string, kind?: "plain" | "xray"): Theme {
   for (let i = 0; i < 6; i++) {
-    const t = Math.random() < 0.25 ? xray() : plain();
+    let t: Theme;
+    if (kind === "xray") t = xray();
+    else if (kind === "plain") t = previous !== COBALT_CREAM.name && Math.random() < 0.1 ? COBALT_CREAM : plain();
+    else if (previous !== COBALT_CREAM.name && Math.random() < 0.1) t = COBALT_CREAM;
+    else t = Math.random() < 0.25 ? xray() : plain();
     if (t.name !== previous) return t;
   }
-  return plain();
+  return kind === "xray" ? xray() : plain();
 }

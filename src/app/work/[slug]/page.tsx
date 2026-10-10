@@ -44,7 +44,7 @@ export default async function CaseStudy({ params }: { params: Promise<{ slug: st
           <HeroImage src={project.image} alt={`${displayTitle(project)} cover`} />
           <div className="absolute inset-0 bg-gradient-to-t from-deep/75 via-deep/10 to-transparent" />
           <ProjectPager prev={neighbour(prev)} next={neighbour(next)} />
-          <div className="absolute inset-x-0 bottom-0 mx-auto box-content flex max-w-[85rem] flex-col gap-3 px-4 pb-8 text-white md:px-6 md:pb-12">
+          <div className="absolute inset-x-0 bottom-0 mx-auto box-content flex max-w-[max(85rem,1360px)] flex-col gap-3 px-4 pb-8 text-white md:px-6 md:pb-12">
             <p className="label opacity-80">
               {numberOf(project)} · {project.type} · {project.published}
             </p>
@@ -55,7 +55,7 @@ export default async function CaseStudy({ params }: { params: Promise<{ slug: st
           </div>
         </section>
 
-        <section className="mx-auto box-content max-w-[85rem] px-4 py-16 md:px-6 md:py-28">
+        <section className="mx-auto box-content max-w-[max(85rem,1360px)] px-4 py-16 md:px-6 md:py-28">
           <Reveal>
             <p className="max-w-4xl text-3xl font-medium leading-[1.1] tracking-tighter md:text-6xl">{project.summary}</p>
           </Reveal>
@@ -111,7 +111,7 @@ export default async function CaseStudy({ params }: { params: Promise<{ slug: st
             className="absolute inset-0 h-full w-full scale-110 object-cover opacity-0 transition-all duration-[900ms] ease-out group-hover:scale-100 group-hover:opacity-100"
           />
           <span className="absolute inset-0 bg-deep/60 opacity-0 transition-opacity duration-700 group-hover:opacity-100" aria-hidden />
-          <div className="relative mx-auto box-content max-w-[85rem] px-4 transition-colors duration-500 group-hover:text-white md:px-6">
+          <div className="relative mx-auto box-content max-w-[max(85rem,1360px)] px-4 transition-colors duration-500 group-hover:text-white md:px-6">
             <p className="label mb-4 text-mute transition-colors duration-500 group-hover:text-white/80">Next · {numberOf(next)}</p>
             <p className="text-5xl font-medium tracking-tighter transition-transform duration-500 group-hover:translate-x-3 md:text-9xl">
               {displayTitle(next)} <span aria-hidden className="text-vermilion">→</span>

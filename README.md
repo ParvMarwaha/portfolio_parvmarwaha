@@ -42,7 +42,7 @@ No scroll-hijacking and no horizontal page scroll.
 
 ## Sizing
 
-The site is built to look the same on any screen, only bigger or smaller. Sizes are in `rem`, and one rule in `globals.css` sets the root size: 16px up to a 1440 x 900 screen, and above that it grows with the smaller of the screen's width and height (a 1920 x 1080 screen runs at 19.2px, a 2560 x 1440 one at 25.6px). So write new sizes in `rem` (or Tailwind's own scale), not `px`; keep `px` only for hairlines (borders, rings) and shadows. Page content is `85rem` wide (1360px at the base size). The full navigation needs 1024px; below that there is a Menu button. The hero's name is also capped by the screen's height, so the cover never outgrows a short laptop screen.
+The site is built to look the same on any screen, only bigger or smaller. Sizes are in `rem`, and one rule in `globals.css` sets the root size. The reference is a 1440 x 900 screen at 16px. From 1024px wide up, the root size follows the smaller of the screen's width and height, between 14px and 34px: a 14-inch MacBook's browser window (about 1512 x 850) runs at about 15px, a 1920 x 1080 screen at 19.2px, a 2560 x 1440 one at 25.6px. On every one of them the cover card takes about 83% of the window's height. Below 1024px it stays 16px (tablets and phones) and the full navigation gives way to a Menu button. So write new sizes in `rem` (or Tailwind's own scale), not `px`; keep `px` only for hairlines (borders, rings) and shadows. Page content is at least 1360px wide when the screen allows (`max-w-[max(85rem,1360px)]`). The hero's name is also capped by the screen's height, so the cover never outgrows a short screen.
 
 ## Content
 

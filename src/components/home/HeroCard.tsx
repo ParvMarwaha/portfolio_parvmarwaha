@@ -98,7 +98,7 @@ export default function HeroCard() {
   return (
     <div className="px-4 pt-[5.25rem] md:px-6 md:pt-[5.75rem]">
       <div
-        className="group/hero relative mx-auto w-full max-w-[85rem] [--pad:1.5rem] md:[--pad:3.5rem]"
+        className="group/hero relative mx-auto w-full max-w-[max(85rem,1360px)] [--pad:1.5rem] md:[--pad:3.5rem]"
         data-entered={entered}
         style={{ perspective: "1600px" }}
       >
@@ -124,7 +124,7 @@ export default function HeroCard() {
                 style={{
                   minHeight: "clamp(31.25rem, calc(100svh - 9.375rem), 48.75rem)",
                   // The name: as big as the width allows (11rem at most), but never so tall that the card outgrows a short screen.
-                  ["--fs" as string]: "max(3.5rem, min(11rem, calc((100svh - 24.5rem) / 2.12), calc((min(85rem, 100vw - 3rem) - 2 * var(--pad)) / 4.3)))",
+                  ["--fs" as string]: "max(3.5rem, min(11rem, calc((100svh - 24.5rem) / 2.12), calc((min(max(85rem, 1360px), 100vw - 3rem) - 2 * var(--pad)) / 4.3)))",
                   ...face,
                 }}
               >

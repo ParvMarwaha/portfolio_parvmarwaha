@@ -13,7 +13,7 @@ export default function Contact() {
   return (
     <>
       <main className="px-4 pb-16 pt-28 md:px-6 md:pb-24 md:pt-36">
-        <div className="mx-auto max-w-[85rem]">
+        <div className="mx-auto max-w-[max(85rem,1360px)]">
         <p className="label mb-5 text-mute">Contact</p>
         <h1 className="text-6xl font-medium leading-[0.9] tracking-tighter md:text-[9rem]">
           Con<em className="font-display italic text-cobalt">tact</em>

@@ -21,11 +21,14 @@ export default function ThemeSwitcher() {
   const [toast, setToast] = useState<Theme | null>(null);
   const toastTimer = useRef(0);
   const turns = useRef(0);
+  // Presses alternate: a plain palette, then an x-ray one, then plain again.
+  const nextKind = useRef<"plain" | "xray">("plain");
   const faceRef = useRef<HTMLSpanElement>(null);
 
   // A palette restored before the page painted still needs the browser bar colour.
   useEffect(() => {
     const saved = readTheme();
+    nextKind.current = saved && saved.fx !== "xray" ? "xray" : "plain";
     if (!saved) return;
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", saved.vars.primary);
   }, []);
@@ -60,7 +63,11 @@ export default function ThemeSwitcher() {
     toastTimer.current = window.setTimeout(() => setToast(null), 3200);
   };
 
-  const shuffle = (e: React.MouseEvent<HTMLElement>) => change(e, generateTheme(readTheme()?.name ?? COBALT.name));
+  const shuffle = (e: React.MouseEvent<HTMLElement>) => {
+    const kind = nextKind.current;
+    nextKind.current = kind === "plain" ? "xray" : "plain";
+    change(e, generateTheme(readTheme()?.name ?? COBALT.name, kind));
+  };
 
   return (
     <>
@@ -102,7 +109,10 @@ export default function ThemeSwitcher() {
               {toast.name !== COBALT.name ? (
                 <button
                   type="button"
-                  onClick={(e) => change(e, null)}
+                  onClick={(e) => {
+                    nextKind.current = "plain";
+                    change(e, null);
+                  }}
                   className="rounded-full bg-paper px-3 py-1.5 text-[0.75rem] font-semibold text-ink transition-transform hover:scale-[1.04]"
                   data-cursor-label="Reset"
                 >
