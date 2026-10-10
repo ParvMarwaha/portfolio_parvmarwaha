@@ -40,7 +40,7 @@ No scroll-hijacking and no horizontal page scroll.
 
 ### Music
 
-A small button in the top bar (four bars that dance while it plays; in the Menu on phones) turns the site's music on and off. It is off until you press it, and remembers your choice (it comes back on your first tap or key press, since browsers do not allow sound before that). The music is not a file: `src/utils/ambient.ts` makes it live with Web Audio, a slow pad over four chords in A minor with a few soft plucks through an echo, so nothing is downloaded and there is nothing to license. The same switch gives every button and link a soft blip when the mouse moves onto it (a note from the current key, so moving around plays a little tune) and a tap when pressed. Pressing the colour button moves it to a new key, and it goes quiet when the tab is hidden. `SoundToggle.tsx` has the buttons.
+A small button in the top bar (four bars that dance while it plays; in the Menu on phones) turns the site's music on and off. It is on by default, at a low level: it starts as soon as the browser allows it, which for most visitors means on their first tap or key press (browsers do not allow sound before that). Switching it off is remembered. The music is not a file: `src/utils/ambient.ts` makes it live with Web Audio, a slow pad over four chords in A minor with a few soft plucks through an echo, so nothing is downloaded and there is nothing to license. The same switch gives every button and link a soft blip when the mouse moves onto it (a note from the current key, so moving around plays a little tune) and a tap when pressed. Pressing the colour button moves it to a new key, and it goes quiet when the tab is hidden. `SoundToggle.tsx` has the buttons.
 
 ### Phones
 

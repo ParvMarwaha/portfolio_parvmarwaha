@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { followTheme, resumeOnFirstGesture, toggleAmbient, useAmbient } from "@/utils/ambient";
+import { followTheme, startOnLoad, toggleAmbient, useAmbient } from "@/utils/ambient";
 
 /** Four little bars that dance while the music plays and lie flat when it is off. */
 function Bars({ on }: { on: boolean }) {
@@ -23,11 +23,11 @@ function Bars({ on }: { on: boolean }) {
   );
 }
 
-/** Wires the music to the page once (colours, hidden tabs, "on" remembered from last time). Renders nothing. */
+/** Wires the music to the page once (starts it, follows the colours, quiets hidden tabs). Renders nothing. */
 export function SoundBrain() {
   useEffect(() => {
     const offTheme = followTheme();
-    const offGesture = resumeOnFirstGesture();
+    const offGesture = startOnLoad();
     return () => {
       offTheme();
       offGesture();
@@ -36,13 +36,14 @@ export function SoundBrain() {
   return null;
 }
 
-/** The music button in the top bar. Off until pressed. */
+/** The music button in the top bar. */
 export default function SoundToggle() {
   const on = useAmbient();
   return (
     <button
       type="button"
       onClick={toggleAmbient}
+      data-sound-toggle
       aria-pressed={on}
       aria-label={on ? "Turn the music off" : "Turn the music on"}
       data-cursor-label={on ? "Music off" : "Music on"}
@@ -60,6 +61,7 @@ export function SoundRow() {
     <button
       type="button"
       onClick={toggleAmbient}
+      data-sound-toggle
       aria-pressed={on}
       className="flex w-fit items-center gap-3 rounded-full px-4 py-2.5 ring-1 ring-paper/40"
     >

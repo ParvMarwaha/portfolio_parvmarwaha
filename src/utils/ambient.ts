@@ -20,6 +20,8 @@ const KEYS = [0, 2, 3, 5, 7, -2, -5];
 const BEAT = 0.5;
 const BEATS_PER_CHORD = 16;
 const BASE_HZ = 110;
+// Master level: the music sits quietly under the page.
+const VOLUME = 0.4;
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -156,26 +158,36 @@ export function uiSound(kind: "hover" | "click") {
   o.start(t);
 }
 
-export async function startAmbient() {
-  if (playing) return;
-  playing = true;
-  emit();
+/** `auto`: only start if the browser lets a page make sound unprompted; otherwise quietly give up and say so. */
+export async function startAmbient(auto = false): Promise<boolean> {
+  if (playing) return true;
   try {
     if (!ctx) ctx = build();
+    if (auto && ctx.state !== "running") {
+      void ctx.close();
+      ctx = null;
+      master = null;
+      bus = null;
+      return false;
+    }
+    playing = true;
+    emit();
     await ctx.resume();
-    if (!playing) return;
+    if (!playing) return true;
     nextBeat = ctx.currentTime + 0.1;
     beat = 0;
     window.clearInterval(timer);
     timer = window.setInterval(schedule, 250);
     schedule();
-    fade(0.8, 2);
+    fade(VOLUME, 2.5);
     try {
       localStorage.setItem(KEY, "1");
     } catch {}
+    return true;
   } catch {
     playing = false;
     emit();
+    return false;
   }
 }
 
@@ -200,24 +212,38 @@ export function stopAmbient() {
 
 export const toggleAmbient = () => (playing ? stopAmbient() : void startAmbient());
 
-/** Called once at the start: if the visitor had it on last time, it comes back on their first tap or key press. */
-export function resumeOnFirstGesture() {
-  let wanted = false;
+/**
+ * The music is on by default. Browsers only allow sound after a tap or key press, so it tries to start straight
+ * away and, if that is blocked, starts on the first one. Someone who switched it off stays off.
+ */
+export function startOnLoad() {
+  let wanted = true;
   try {
-    wanted = localStorage.getItem(KEY) === "1";
+    wanted = localStorage.getItem(KEY) !== "0";
   } catch {}
   if (!wanted) return () => {};
-  const go = () => {
+  const off = () => {
+    window.removeEventListener("click", go);
+    window.removeEventListener("touchend", go);
+    window.removeEventListener("keydown", go);
+  };
+  const go = (e: Event) => {
+    // The sound button has its own say.
+    if ((e.target as HTMLElement | null)?.closest?.("[data-sound-toggle]")) return;
     off();
     void startAmbient();
   };
-  const off = () => {
-    window.removeEventListener("pointerdown", go);
-    window.removeEventListener("keydown", go);
+  let cancelled = false;
+  void startAmbient(true).then((started) => {
+    if (started || cancelled) return;
+    window.addEventListener("click", go);
+    window.addEventListener("touchend", go);
+    window.addEventListener("keydown", go);
+  });
+  return () => {
+    cancelled = true;
+    off();
   };
-  window.addEventListener("pointerdown", go);
-  window.addEventListener("keydown", go);
-  return off;
 }
 
 /** The music follows the colours: every new palette picks a new key, taken up at the next chord. */
