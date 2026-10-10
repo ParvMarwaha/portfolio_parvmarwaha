@@ -5,6 +5,7 @@ import { flushSync } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { COBALT, generateTheme, type Theme } from "@/content/themes";
 import { applyTheme, readTheme } from "@/utils/theme";
+import { isCoarse } from "@/utils/device";
 
 type ViewTransitionLike = { ready: Promise<void> };
 type DocWithTransitions = Document & { startViewTransition?: (update: () => void) => ViewTransitionLike };
@@ -40,18 +41,41 @@ export default function ThemeSwitcher() {
 
     const apply = () => flushSync(() => applyTheme(next));
     const doc = document as DocWithTransitions;
-    if (!doc.startViewTransition || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const radius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+    if (reduced) {
       apply();
-    } else {
+    } else if (doc.startViewTransition && !isCoarse() && window.innerWidth >= 768) {
       doc.startViewTransition(apply).ready
         .then(() => {
-          const radius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
           document.documentElement.animate(
             { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
             { duration: 1000, easing: "cubic-bezier(0.65, 0, 0.2, 1)", pseudoElement: "::view-transition-new(root)" }
           );
         })
         .catch(() => {});
+    } else {
+      // Phones: no page snapshot (it is heavy, and flashed the 3D card the wrong way up). A flat sheet in the new
+      // colour floods out from the button, the site is repainted underneath it, then the sheet lifts.
+      const sheet = document.createElement("div");
+      sheet.setAttribute("aria-hidden", "true");
+      sheet.style.cssText = `position:fixed;inset:0;z-index:9989;pointer-events:none;clip-path:circle(0px at ${x}px ${y}px);background:${(next ?? COBALT).vars.primary}`;
+      document.body.appendChild(sheet);
+      const flood = sheet.animate(
+        { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
+        { duration: 450, easing: "cubic-bezier(0.65, 0, 0.2, 1)", fill: "forwards" }
+      );
+      let done = false;
+      const land = () => {
+        if (done) return;
+        done = true;
+        apply();
+        sheet.animate({ opacity: [1, 0] }, { duration: 350, easing: "ease-out", fill: "forwards" });
+        window.setTimeout(() => sheet.remove(), 450);
+      };
+      flood.finished.then(land, land);
+      // If the browser holds animations back (a backgrounded tab), the colours must still change.
+      window.setTimeout(land, 700);
     }
 
     // The face of the button spins a little further on every press.
@@ -76,7 +100,7 @@ export default function ThemeSwitcher() {
         onClick={shuffle}
         aria-label="Surprise me: repaint this site in new random colours"
         data-cursor-label="New colours"
-        className="group grid h-9 w-9 place-items-center rounded-full bg-paper/85 ring-1 ring-ink/10 backdrop-blur-md transition-shadow hover:ring-ink/40"
+        className="group grid h-9 w-9 place-items-center rounded-full bg-paper ring-1 ring-ink/10 transition-shadow md:bg-paper/85 md:backdrop-blur-md hover:ring-ink/40"
       >
         <span
           ref={faceRef}

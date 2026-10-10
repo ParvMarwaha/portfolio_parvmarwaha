@@ -8,10 +8,11 @@ import { site } from "@/content/site";
 import { getLenis } from "@/utils/lenis";
 import Magnetic from "@/components/ui/Magnetic";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
+import SoundToggle, { SoundBrain, SoundRow } from "@/components/SoundToggle";
 import NavLinks, { LINKS as links } from "@/components/NavLinks";
 
-const pillBase = "rounded-full ring-1 ring-ink/10 backdrop-blur-md";
-const pill = `${pillBase} bg-paper/85`;
+const pillBase = "rounded-full ring-1 ring-ink/10 md:backdrop-blur-md";
+const pill = `${pillBase} bg-paper md:bg-paper/85`;
 
 /** Three floating pills (name, navigation, hire) so it stays legible over any content. */
 export default function TopBar() {
@@ -31,6 +32,7 @@ export default function TopBar() {
 
   return (
     <>
+      <SoundBrain />
       <header className="pointer-events-none fixed inset-x-0 top-0 z-[60] flex items-start justify-between p-3 md:p-5">
         <Link
           href="/"
@@ -46,10 +48,11 @@ export default function TopBar() {
 
         <div className="pointer-events-auto flex items-center gap-2">
           <ThemeSwitcher />
+          <SoundToggle />
           <Link
             href="/play"
             className={`hidden px-4 py-2 text-[0.8125rem] font-medium tracking-normal transition-colors sm:block ${pillBase} ${
-              pathname === "/play" ? "bg-ink text-paper" : "bg-paper/85 hover:bg-paper"
+              pathname === "/play" ? "bg-ink text-paper" : "bg-paper hover:bg-paper md:bg-paper/85"
             }`}
             data-cursor-label="Play"
           >
@@ -100,9 +103,12 @@ export default function TopBar() {
                 </motion.div>
               ))}
             </nav>
+            <div className="flex flex-col gap-5">
+              <SoundRow />
             <div className="label flex flex-col gap-2 opacity-80">
               <a href={`mailto:${site.email}`}>{site.email}</a>
               <span>2026 © {site.name}</span>
+            </div>
             </div>
           </motion.div>
         )}

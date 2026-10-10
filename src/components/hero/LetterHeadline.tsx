@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { isCoarse } from "@/utils/device";
 
 const istClock = () =>
   new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date());
@@ -38,6 +39,7 @@ export default function LetterHeadline({
   const h1Ref = useRef<HTMLElement | null>(null);
   const letters = useRef<(HTMLSpanElement | null)[]>([]);
   const waveAt = useRef(-10_000);
+  const wake = useRef<() => void>(() => {});
 
   useEffect(() => {
     const h1 = h1Ref.current;
@@ -60,11 +62,17 @@ export default function LetterHeadline({
     document.documentElement.addEventListener("mouseleave", onLeave);
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // On a phone nobody is pointing, so the letters hold still and the loop only runs while a wave does.
+    const still = isCoarse();
     // The cover asks for one wave when it has been dealt onto the page.
-    const onWave = () => (waveAt.current = performance.now());
+    const onWave = () => {
+      waveAt.current = performance.now();
+      wake.current();
+    };
     if (!decorative) window.addEventListener("pm:wave", onWave);
     const weights = letters.current.map(() => 560);
     let raf = 0;
+    const WAVE_MS = 1000 / 2.4 + letters.current.length * 200 / 2.4 + 100;
     let last = performance.now();
     const loop = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
@@ -79,13 +87,19 @@ export default function LetterHeadline({
           const zoom = el.offsetWidth ? r.width / el.offsetWidth : 1;
           const d = Math.hypot(pointer.x - (r.left + r.width / 2), pointer.y - (r.top + r.height / 2)) / zoom;
           target = 330 + 570 * Math.pow(Math.max(0, 1 - d / (fs * 1.5)), 1.3);
-        } else target = 560 + 260 * Math.sin(now / 760 + i * 0.6);
+        } else target = still ? 600 : 560 + 260 * Math.sin(now / 760 + i * 0.6);
         // Poke the headline: a wave of weight runs through the letters.
         const phase = ((now - waveAt.current) / 1000) * 2.4 - i * 0.2;
         if (phase > 0 && phase < 1) target = Math.max(target, 260 + 640 * Math.sin(phase * Math.PI));
         weights[i] += (target - weights[i]) * k;
         el.style.fontWeight = String(Math.round(weights[i]));
       });
+      if (still && now - waveAt.current > WAVE_MS && weights.every((w) => Math.abs(w - 600) < 1)) raf = 0;
+      else raf = requestAnimationFrame(loop);
+    };
+    wake.current = () => {
+      if (raf) return;
+      last = performance.now();
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
@@ -121,7 +135,10 @@ export default function LetterHeadline({
     className: `leading-[0.86] tracking-[-0.04em] ${className}`,
     style: { fontSize },
     "data-cursor-label": "Poke",
-    onClick: () => (waveAt.current = performance.now()),
+    onClick: () => {
+      waveAt.current = performance.now();
+      wake.current();
+    },
   };
 
   return decorative ? (

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useCoarse } from "@/utils/device";
 
 // Read when the confetti is thrown, so it wears whatever colours the site has right now.
 const themeColors = () => {
@@ -28,6 +29,7 @@ interface Bit {
  */
 export default function Confetti() {
   const router = useRouter();
+  const coarse = useCoarse();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const toastRef = useRef<HTMLAnchorElement>(null);
 
@@ -133,7 +135,10 @@ export default function Confetti() {
       window.clearTimeout(toastTimer);
       cancelAnimationFrame(raf);
     };
-  }, [router]);
+  }, [router, coarse]);
+
+  // The words are typed on a keyboard, and a full-screen canvas layer is dead weight on a phone.
+  if (coarse) return null;
 
   return (
     <>

@@ -4,15 +4,19 @@ import { useState } from "react";
 import LetterHeadline from "@/components/hero/LetterHeadline";
 import { COBALT, generateTheme, type Theme } from "@/content/themes";
 import { applyTheme } from "@/utils/theme";
+import { useCoarse } from "@/utils/device";
 import { AttractorLab, BrainwaveLab, FieldLab, OrbitLab, SynapseLab, TuringLab } from "./generative";
 
 /** The cover's headline trick, on its own: the font's weight axis follows your cursor. */
 function WeightLab() {
+  const coarse = useCoarse();
   return (
-    <div className="flex h-full flex-col justify-between bg-paper p-6 text-ink">
+    <div className="flex h-full flex-col justify-between bg-paper p-6 text-ink [container-type:inline-size]">
       <p className="label text-mute">Variable font · weight 100 to 900</p>
-      <LetterHeadline lines={["Weight"]} decorative fontSize={150} label="Weight" />
-      <p className="text-[0.875rem] leading-snug text-mute">Move your cursor over the word. Every letter reacts on its own.</p>
+      <LetterHeadline lines={["Weight"]} decorative fontSize="min(150px, 24cqw)" label="Weight" />
+      <p className="text-[0.875rem] leading-snug text-mute">
+        {coarse ? "Tap the word. A wave of weight runs through the letters." : "Move your cursor over the word. Every letter reacts on its own."}
+      </p>
     </div>
   );
 }
@@ -22,7 +26,7 @@ function PaletteLab() {
   const [theme, setTheme] = useState<Theme>(COBALT);
   const v = theme.vars;
   const swatches = [v.paper, v.primary, v.accent, v.highlight, v.ink];
-  const btn = "rounded-full px-3.5 py-2 text-[0.75rem] font-semibold tracking-normal transition-transform hover:scale-[1.04]";
+  const btn = "rounded-full px-4 py-2.5 text-[0.75rem] font-semibold tracking-normal transition-transform hover:scale-[1.04] md:px-3.5 md:py-2";
   return (
     <div className="flex h-full flex-col p-5" style={{ background: v.paper, color: v.ink }}>
       <p className="label" style={{ opacity: 0.6 }}>

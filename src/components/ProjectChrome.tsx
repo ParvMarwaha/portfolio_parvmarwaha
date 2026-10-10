@@ -80,7 +80,7 @@ export function ProjectPager({ prev, next }: { prev: Neighbour; next: Neighbour 
     return () => window.removeEventListener("keydown", onKey);
   }, [router, prev.href, next.href]);
 
-  const pill = "rounded-full bg-paper/90 px-4 py-2 text-[0.75rem] font-medium tracking-normal text-ink ring-1 ring-ink/10 backdrop-blur-md transition-colors hover:bg-ink hover:text-paper";
+  const pill = "rounded-full bg-paper px-4 py-2 text-[0.75rem] font-medium tracking-normal text-ink ring-1 ring-ink/10 md:bg-paper/90 md:backdrop-blur-md transition-colors hover:bg-ink hover:text-paper";
   return (
     <div className="absolute right-4 top-20 z-10 flex gap-2 md:right-10 md:top-24">
       <Link href={prev.href} className={pill} data-cursor-label="Previous">

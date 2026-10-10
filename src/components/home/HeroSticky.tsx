@@ -8,6 +8,7 @@ import { useEffect, useRef } from "react";
  */
 export default function HeroSticky({ children }: { children: React.ReactNode }) {
   const innerRef = useRef<HTMLDivElement>(null);
+  const shadeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -18,7 +19,8 @@ export default function HeroSticky({ children }: { children: React.ReactNode }) 
       if (!el) return;
       const p = Math.min(1, Math.max(0, window.scrollY / (window.innerHeight * 0.85)));
       el.style.transform = `scale(${1 - p * 0.07}) translate3d(0, ${p * 24}px, 0)`;
-      el.style.filter = `brightness(${1 - p * 0.35})`;
+      // A black sheet fading in dims it the same way a brightness filter would, without re-painting the card.
+      if (shadeRef.current) shadeRef.current.style.opacity = String(p * 0.35);
     };
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(update);
@@ -33,8 +35,9 @@ export default function HeroSticky({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="sticky top-0 h-[100svh] overflow-hidden">
-      <div ref={innerRef} className="origin-top will-change-transform">
+      <div ref={innerRef} className="relative origin-top will-change-transform">
         {children}
+        <div ref={shadeRef} className="pointer-events-none absolute inset-0 bg-black opacity-0" aria-hidden />
       </div>
     </div>
   );

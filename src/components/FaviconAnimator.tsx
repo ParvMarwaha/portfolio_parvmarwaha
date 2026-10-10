@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { isCoarse } from "@/utils/device";
 
 /**
  * The tab icon is alive: a round badge with a white disc that breathes in and out and a dot orbiting it, painted in
@@ -9,6 +10,8 @@ import { useEffect } from "react";
  */
 export default function FaviconAnimator() {
   useEffect(() => {
+    // Phones have no tab strip to show it in, so do not spend a timer and a PNG encode on it.
+    if (isCoarse()) return;
     const canvas = document.createElement("canvas");
     canvas.width = 64;
     canvas.height = 64;

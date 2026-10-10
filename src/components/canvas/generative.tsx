@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { alpha, mix, rgb } from "@/utils/color";
+import { isCoarse, useCoarse } from "@/utils/device";
 
 // Generative pictures for the Lab: neurons firing, a strange attractor, a reaction-diffusion pattern, an EEG
 // readout, a flow field and a neural globe. Each is drawn live on a canvas, in the site's current colours, and
@@ -555,12 +556,16 @@ const orbit: Make = (w, h) => {
 
 function Live({ make, fps = 60, caption, tag }: { make: Make; fps?: number; caption: string; tag?: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
+  const coarse = useCoarse();
 
   useEffect(() => {
     const canvas = ref.current;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // Phones: half the pixels and half the frames. These are drawn with the CPU, and a thumb cannot tell the difference.
+    const touch = isCoarse();
+    const maxFps = touch ? Math.min(fps, 30) : fps;
     const pointer = { x: 0, y: 0, active: false };
     let pal = readPalette();
     let demo: Demo | null = null;
@@ -573,7 +578,7 @@ function Live({ make, fps = 60, caption, tag }: { make: Make; fps?: number; capt
 
     const build = () => {
       if (!w || !h) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, touch ? 1.25 : 2);
       canvas.width = Math.round(w * dpr);
       canvas.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -605,12 +610,13 @@ function Live({ make, fps = 60, caption, tag }: { make: Make; fps?: number; capt
     };
     const onLeave = () => (pointer.active = false);
     canvas.addEventListener("pointermove", onMove);
+    canvas.addEventListener("pointerdown", onMove);
     canvas.addEventListener("pointerleave", onLeave);
 
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
       if (reduced || !visible || document.hidden || !demo) return;
-      if (fps < 60 && now - last < 1000 / fps - 2) return;
+      if (maxFps < 60 && now - last < 1000 / maxFps - 2) return;
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       demo({ ctx, w, h, t: (now - t0) / 1000, dt, pointer, pal });
@@ -623,6 +629,7 @@ function Live({ make, fps = 60, caption, tag }: { make: Make; fps?: number; capt
       io.disconnect();
       window.removeEventListener("pm:theme", onTheme);
       canvas.removeEventListener("pointermove", onMove);
+      canvas.removeEventListener("pointerdown", onMove);
       canvas.removeEventListener("pointerleave", onLeave);
     };
   }, [make, fps]);
@@ -631,7 +638,7 @@ function Live({ make, fps = 60, caption, tag }: { make: Make; fps?: number; capt
     <div className="absolute inset-0 bg-deep">
       <canvas ref={ref} className="absolute inset-0 h-full w-full" aria-hidden />
       <span className="label pointer-events-none absolute left-4 top-4 text-on-deep/70">{caption}</span>
-      {tag && <span className="label pointer-events-none absolute bottom-4 right-4 text-on-deep/50">{tag}</span>}
+      {tag && <span className="label pointer-events-none absolute bottom-4 right-4 text-on-deep/50">{coarse ? tag.replace("move", "touch") : tag}</span>}
     </div>
   );
 }

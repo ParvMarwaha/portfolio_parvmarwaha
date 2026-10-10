@@ -7,6 +7,7 @@ import { getLenis, rem } from "@/utils/lenis";
 import LetterHeadline, { useIstClock } from "@/components/hero/LetterHeadline";
 import Magnetic from "@/components/ui/Magnetic";
 import CommentPin from "@/components/canvas/CommentPin";
+import { useCoarse } from "@/utils/device";
 
 const face = { backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" } as const;
 const dots = { backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.13) 1px, transparent 1.4px)", backgroundSize: "22px 22px" };
@@ -38,6 +39,8 @@ function saveContact() {
  */
 export default function HeroCard() {
   const time = useIstClock();
+  // On a phone the card flips as a cross-fade: a 3D-rotating layer this big is slow there, and its snapshot flashed upside down.
+  const flat = useCoarse();
   const [pinOpen, setPinOpen] = useState(false);
   const [entered, setEntered] = useState(false);
   const [flipped, setFlipped] = useState(false);
@@ -100,7 +103,7 @@ export default function HeroCard() {
       <div
         className="group/hero relative mx-auto w-full max-w-[max(85rem,1360px)] [--pad:1.5rem] md:[--pad:3.5rem]"
         data-entered={entered}
-        style={{ perspective: "1600px" }}
+        style={flat ? undefined : { perspective: "1600px" }}
       >
         <div
           className="translate-y-14 scale-[0.96] opacity-0 transition-[opacity,transform] duration-[1200ms] ease-[cubic-bezier(0.2,0.9,0.2,1)] group-data-[entered=true]/hero:translate-y-0 group-data-[entered=true]/hero:scale-100 group-data-[entered=true]/hero:opacity-100 motion-reduce:translate-y-0 motion-reduce:scale-100 motion-reduce:opacity-100"
@@ -110,11 +113,15 @@ export default function HeroCard() {
           <div ref={tiltRef} style={{ transition: "transform 0.35s ease-out" }}>
             <div
               className="relative"
-              style={{
-                transformStyle: "preserve-3d",
-                transform: flipped ? "rotateY(180deg)" : "none",
-                transition: "transform 0.9s cubic-bezier(0.7, 0, 0.2, 1)",
-              }}
+              style={
+                flat
+                  ? undefined
+                  : {
+                      transformStyle: "preserve-3d",
+                      transform: flipped ? "rotateY(180deg)" : "none",
+                      transition: "transform 0.9s cubic-bezier(0.7, 0, 0.2, 1)",
+                    }
+              }
             >
               {/* FRONT */}
               <section
@@ -125,7 +132,7 @@ export default function HeroCard() {
                   minHeight: "clamp(31.25rem, calc(100svh - 9.375rem), 48.75rem)",
                   // The name: as big as the width allows (11rem at most), but never so tall that the card outgrows a short screen.
                   ["--fs" as string]: "max(3.5rem, min(11rem, calc((100svh - 24.5rem) / 2.12), calc((min(max(85rem, 1360px), 100vw - 3rem) - 2 * var(--pad)) / 4.3)))",
-                  ...face,
+                  ...(flat ? { opacity: flipped ? 0 : 1, transition: "opacity 0.45s ease" } : face),
                 }}
               >
                 <div className={`label flex items-center justify-between ${rise("delay-[250ms]")}`}>
@@ -192,7 +199,7 @@ export default function HeroCard() {
                 aria-label="Contact details"
                 inert={!flipped}
                 className="absolute inset-0 flex flex-col justify-between overflow-hidden bg-cobalt p-[var(--pad)] text-paper shadow-[0_40px_80px_-40px_rgba(14,15,26,0.7)]"
-                style={{ transform: "rotateY(180deg)", ...dots, ...face }}
+                style={flat ? { ...dots, opacity: flipped ? 1 : 0, transition: "opacity 0.45s ease" } : { transform: "rotateY(180deg)", ...dots, ...face }}
               >
                 <div className="label flex items-center justify-between">
                   <span className="opacity-80">Visiting card · back</span>
