@@ -24,14 +24,3 @@ export function Ph({
     </div>
   );
 }
-
-export function PhLines({ lines = 4, className = "" }: { lines?: number; className?: string }) {
-  const widths = ["100%", "94%", "98%", "62%", "88%", "70%"];
-  return (
-    <div className={`flex flex-col gap-3 ${className}`} aria-hidden>
-      {Array.from({ length: lines }, (_, i) => (
-        <span key={i} className="block h-[0.625rem] rounded-full bg-ink/10" style={{ width: widths[i % widths.length] }} />
-      ))}
-    </div>
-  );
-}

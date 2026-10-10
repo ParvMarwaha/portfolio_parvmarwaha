@@ -6,20 +6,6 @@ import { COBALT, generateTheme, type Theme } from "@/content/themes";
 import { applyTheme } from "@/utils/theme";
 import { AttractorLab, BrainwaveLab, FieldLab, OrbitLab, SynapseLab, TuringLab } from "./generative";
 
-/** Waiting for its picture or its demo. */
-export function SoonTile() {
-  return (
-    <div className="relative h-full w-full bg-paper-2 text-ink">
-      <svg className="absolute inset-0 h-full w-full opacity-[0.14]" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
-        <line x1="0" y1="0" x2="100" y2="100" stroke="currentColor" vectorEffect="non-scaling-stroke" />
-        <line x1="100" y1="0" x2="0" y2="100" stroke="currentColor" vectorEffect="non-scaling-stroke" />
-      </svg>
-      <span className="label absolute left-5 top-5 opacity-60">Next experiment</span>
-      <span className="absolute bottom-4 left-5 font-display text-5xl italic leading-none">soon.</span>
-    </div>
-  );
-}
-
 /** The cover's headline trick, on its own: the font's weight axis follows your cursor. */
 function WeightLab() {
   return (
