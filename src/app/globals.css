@@ -1,20 +1,47 @@
 @import "tailwindcss";
 
-@theme {
-  --color-ivory: #F7F6F2;
-  --color-bone: #EAE7E0;
-  --color-charcoal: #111111;
-  --color-graphite: #2D2D2D;
-  --color-bronze: #B39D82;
-  
-  --font-sans: var(--font-inter);
-  --font-serif: var(--font-inter);
+/* Bone canvas, ink text, cobalt for UI and the cover, vermilion for the hire call, butter for sticky notes. */
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-ink: var(--ink);
+  --color-mute: var(--mute);
+  --color-line: var(--line);
+  --color-cobalt: var(--cobalt);
+  --color-vermilion: var(--vermilion);
+  --color-butter: var(--butter);
+  --color-deep: var(--deep);
+  --color-on-deep: var(--on-deep);
+  --color-spark: var(--spark);
+
+  --font-sans: var(--font-grotesk);
+  --font-display: var(--font-instrument);
 }
 
+/* The palette variables (--paper, --ink, --cobalt, ...) are written into <head> from src/content/themes.ts. */
+
 @layer base {
+  /* Everything is sized in rem, so this one rule scales the whole site. 16px up to a 1440 x 900 screen; above that
+     the page grows with the smaller of the width and the height, so a big monitor shows the same layout, just larger. */
+  html {
+    background-color: var(--paper);
+    font-size: clamp(16px, min(1.1111vw, 1.7778svh), 34px);
+  }
+
   body {
-    background-color: var(--color-ivory);
-    color: var(--color-charcoal);
+    background-color: var(--paper);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Returning visitors in the same session skip the intro curtain. */
+  html[data-intro="done"] .preloader {
+    display: none;
+  }
+
+  ::selection {
+    background: var(--cobalt);
+    color: #fff;
   }
 
   @media (pointer: fine) {
@@ -27,19 +54,19 @@
   html.lenis, html.lenis body {
     height: auto;
   }
-  
+
   .lenis.lenis-smooth {
     scroll-behavior: auto !important;
   }
-  
+
   .lenis.lenis-smooth [data-lenis-prevent] {
     overscroll-behavior: contain;
   }
-  
+
   .lenis.lenis-stopped {
     overflow: hidden;
   }
-  
+
   .lenis.lenis-smooth iframe {
     pointer-events: none;
   }
@@ -49,4 +76,66 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Small tracked-caps label, set in the site's own grotesk (no separate mono face). */
+  .label {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes pin-pulse {
+  0% { transform: scale(1); opacity: 0.55; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+@keyframes ball-bounce {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(70px, -46px); }
+  50%  { transform: translate(140px, 0); }
+  75%  { transform: translate(70px, -46px); }
+  100% { transform: translate(0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Changing colours: the new theme is revealed as a circle growing out of the button (see ThemeSwitcher). */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) {
+  z-index: 1;
+}
+::view-transition-new(root) {
+  z-index: 2;
+}
+/* The cursor stays live while the colours change instead of freezing in the snapshot. */
+::view-transition-group(pm-cursor),
+::view-transition-new(pm-cursor) {
+  animation: none;
+}
+::view-transition-old(pm-cursor) {
+  display: none;
+}
+
+/* X-ray palettes are dark: the big type gets a soft glow. The project pictures are never touched by a theme. */
+html[data-fx="xray"] h1,
+html[data-fx="xray"] h2 {
+  text-shadow: 0 0 28px color-mix(in srgb, var(--cobalt) 50%, transparent);
 }

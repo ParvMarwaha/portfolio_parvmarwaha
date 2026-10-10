@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  async redirects() {
+    // The Lab used to be called Canvas.
+    return [{ source: "/canvas", destination: "/lab", permanent: false }];
+  },
 };
 
 export default nextConfig;

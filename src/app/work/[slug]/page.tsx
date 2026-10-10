@@ -1,100 +1,125 @@
-"use client";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { projects, getProject, nextOf, numberOf, displayTitle } from "@/content/projects";
+import RemoteImage from "@/components/ui/RemoteImage";
+import SiteFooter from "@/components/SiteFooter";
+import VideoEmbed from "@/components/VideoEmbed";
+import Gallery from "@/components/Gallery";
+import Reveal from "@/components/ui/Reveal";
+import { HeroImage, ProjectPager, ReadingProgress } from "@/components/ProjectChrome";
 
-import { useEffect, useRef } from "react";
-import Image from "next/image";
-import { gsap } from "@/utils/gsap";
-import { useParams } from "next/navigation";
+export function generateStaticParams() {
+  return projects.map((p) => ({ slug: p.slug }));
+}
 
-export default function ProjectDetail() {
-  const { slug } = useParams();
-  const heroImageRef = useRef<HTMLDivElement>(null);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const project = getProject(slug);
+  return project ? { title: displayTitle(project), description: project.summary } : {};
+}
 
-  useEffect(() => {
-    const tl = gsap.timeline();
+export default async function CaseStudy({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const project = getProject(slug);
+  if (!project) notFound();
+  const next = nextOf(slug);
+  const index = projects.indexOf(project);
+  const prev = projects[(index - 1 + projects.length) % projects.length];
+  const neighbour = (p: typeof project) => ({ href: `/work/${p.slug}`, no: numberOf(p), title: p.title });
 
-    tl.fromTo(
-      heroImageRef.current,
-      { scale: 1.1, opacity: 0 },
-      { scale: 1, opacity: 1, duration: 2, ease: "power3.out" }
-    );
-  }, []);
+  const meta: [string, React.ReactNode][] = [
+    ["Type", project.type],
+    ["Published", project.published],
+    ["Tools", project.tools.join(", ")],
+    ["Fields", project.fields.join(", ")],
+  ];
 
   return (
-    <main className="w-full min-h-screen bg-ivory text-charcoal">
-      {/* Opening Hero */}
-      <section className="relative w-full h-[80vh] md:h-screen overflow-hidden">
-        <div ref={heroImageRef} className="absolute inset-0 w-full h-full">
-          <Image
-            src="/images/work1.png"
-            alt="Project Hero"
-            fill
-            priority
-            className="object-cover"
-          />
-        </div>
-        <div className="absolute inset-0 bg-black/20" />
-        <div className="absolute bottom-16 left-6 md:left-16 z-10 text-ivory mix-blend-difference">
-          <h1 className="text-5xl md:text-8xl font-serif mb-4 capitalize">
-            {slug ? (slug as string).replace("-", " ") : "The Project"}
-        </div>
-      </section>
-
-      {/* The Story */}
-      <section className="py-32 px-6 md:px-16 max-w-4xl mx-auto">
-        <div className="text-2xl md:text-4xl font-serif leading-snug">
-          How do we translate physical presence into a digital medium? We began with the concept of negative space, allowing the content to breathe exactly as it would in a modern art gallery.
-        </div>
-      </section>
-
-      {/* Visual Language (Editorial Layout) */}
-      <section className="py-16 md:py-32 px-6 md:px-16 w-full flex flex-col md:flex-row gap-16 items-center">
-        <div className="w-full md:w-5/12 order-2 md:order-1">
-          <p className="text-lg font-sans text-graphite leading-relaxed">
-            Every typeface and color decision was made with restraint. We relied on a monolithic typographic hierarchy and subtle contrast to direct the user's eye, stripping away anything that didn't serve the core narrative.
-          </p>
-        </div>
-        <div className="w-full md:w-7/12 order-1 md:order-2 relative aspect-[4/3] md:aspect-square overflow-hidden">
-          <Image
-            src="/images/work2.png"
-            alt="Editorial detail"
-            fill
-            className="object-cover"
-          />
-        </div>
-      </section>
-
-      {/* Edge to Edge Image */}
-      <section className="w-full h-screen relative overflow-hidden my-32">
-        <Image
-          src="/images/work3.png"
-          alt="Full screen project detail"
-          fill
-          className="object-cover"
-        />
-      </section>
-
-      {/* Outcome */}
-      <section className="py-32 px-6 md:px-16 max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-end border-b border-charcoal/10 pb-32">
-        <div className="w-full md:w-1/2 mb-16 md:mb-0">
-          <div className="text-3xl md:text-5xl font-serif">
-            A digital space that feels earned, not just visited.
+    <>
+      <ReadingProgress />
+      <main>
+        {/* Full-bleed cover, the same image the canvas frame opens into, so the transition lands seamlessly. */}
+        <section className="relative h-[100svh] w-full overflow-hidden bg-deep">
+          <HeroImage src={project.image} alt={`${displayTitle(project)} cover`} />
+          <div className="absolute inset-0 bg-gradient-to-t from-deep/75 via-deep/10 to-transparent" />
+          <ProjectPager prev={neighbour(prev)} next={neighbour(next)} />
+          <div className="absolute inset-x-0 bottom-0 mx-auto box-content flex max-w-[85rem] flex-col gap-3 px-4 pb-8 text-white md:px-6 md:pb-12">
+            <p className="label opacity-80">
+              {numberOf(project)} · {project.type} · {project.published}
+            </p>
+            <h1 className="text-6xl font-medium leading-[0.9] tracking-tighter md:text-[9rem]">
+              {project.title}
+              {project.kind && <span className="ml-3 font-display italic text-butter md:ml-5">{`// ${project.kind}`}</span>}
+            </h1>
           </div>
-        </div>
-        <div className="w-full md:w-1/3 text-base text-graphite font-sans">
-          The result is an award-winning digital experience that increased dwell time by 300% and completely repositioned the brand within the luxury sector.
-        </div>
-      </section>
+        </section>
 
-      {/* Next Project */}
-      <section className="h-[50vh] flex items-center justify-center">
-        <a 
-          href="/work/next-project" 
-          className="text-4xl md:text-7xl font-serif hover:opacity-70 transition-opacity"
-          data-cursor="hover"
+        <section className="mx-auto box-content max-w-[85rem] px-4 py-16 md:px-6 md:py-28">
+          <Reveal>
+            <p className="max-w-4xl text-3xl font-medium leading-[1.1] tracking-tighter md:text-6xl">{project.summary}</p>
+          </Reveal>
+
+          <dl className="mt-14 grid grid-cols-1 gap-x-6 gap-y-8 border-y border-line py-10 sm:grid-cols-2 md:mt-20 md:grid-cols-4">
+            {meta.map(([k, v]) => (
+              <div key={k}>
+                <dt className="label mb-2 text-mute">{k}</dt>
+                <dd className="text-lg tracking-tight">{v}</dd>
+              </div>
+            ))}
+          </dl>
+
+          {(project.vimeo || project.prototype) && (
+            <div className="mt-14 grid gap-4 md:mt-20">
+              {project.vimeo && (
+                <VideoEmbed id={project.vimeo} poster={project.image} title={`${displayTitle(project)} video`} fallbackHref={`https://vimeo.com/${project.vimeo}`} />
+              )}
+              {project.prototype && (
+                <div className="h-[80svh] w-full overflow-hidden bg-paper-2">
+                  <iframe src={project.prototype} title={`${displayTitle(project)} prototype`} allowFullScreen loading="lazy" className="h-full w-full border-0" />
+                </div>
+              )}
+            </div>
+          )}
+
+          {project.gallery.length > 0 && (
+            <div className="mt-14 md:mt-20">
+              <p className="label mb-5 text-mute">The work · click an image to zoom, arrows to browse</p>
+              <Gallery images={project.gallery} label={displayTitle(project)} />
+            </div>
+          )}
+
+          <div className="mt-14 flex flex-wrap items-center gap-3 md:mt-20">
+            <Link
+              href="/contact"
+              className="rounded-full bg-vermilion px-6 py-3 text-[0.875rem] font-semibold tracking-normal text-white transition-transform hover:scale-[1.04]"
+            >
+              Hire me ↗
+            </Link>
+          </div>
+        </section>
+
+        <Link
+          href={`/work/${next.slug}`}
+          className="group relative block overflow-hidden border-t border-line py-20 md:py-32"
+          data-cursor-label="Next"
         >
-          Next Project
-        </a>
-      </section>
-    </main>
+          <RemoteImage
+            src={next.image}
+            alt=""
+            aria-hidden
+            className="absolute inset-0 h-full w-full scale-110 object-cover opacity-0 transition-all duration-[900ms] ease-out group-hover:scale-100 group-hover:opacity-100"
+          />
+          <span className="absolute inset-0 bg-deep/60 opacity-0 transition-opacity duration-700 group-hover:opacity-100" aria-hidden />
+          <div className="relative mx-auto box-content max-w-[85rem] px-4 transition-colors duration-500 group-hover:text-white md:px-6">
+            <p className="label mb-4 text-mute transition-colors duration-500 group-hover:text-white/80">Next · {numberOf(next)}</p>
+            <p className="text-5xl font-medium tracking-tighter transition-transform duration-500 group-hover:translate-x-3 md:text-9xl">
+              {displayTitle(next)} <span aria-hidden className="text-vermilion">→</span>
+            </p>
+          </div>
+        </Link>
+      </main>
+      <SiteFooter />
+    </>
   );
 }
