@@ -1,16 +1,14 @@
-import { COBALT, THEME_KEY, VAR_MAP, type Palette, type Theme } from "@/content/themes";
+import { COBALT, VAR_MAP, type Palette, type Theme } from "@/content/themes";
 
-/** The theme saved by the visitor, if any (the default Cobalt is never saved). */
+// The palette on screen right now. It lives only in memory: a reload always starts again from Cobalt.
+let current: Theme | null = null;
+
+/** The palette currently applied, or null for the default Cobalt. */
 export function readTheme(): Theme | null {
-  try {
-    const t = JSON.parse(localStorage.getItem(THEME_KEY) ?? "null");
-    return t && t.vars ? (t as Theme) : null;
-  } catch {
-    return null;
-  }
+  return current;
 }
 
-/** Repaint the whole site. Pass null to go back to Cobalt. Only the site's own colours change, never the project pictures. */
+/** Repaint the whole site (until the page is reloaded). Pass null to go back to Cobalt. Only the site's own colours change, never the project pictures. */
 export function applyTheme(theme: Theme | null) {
   const root = document.documentElement;
   (Object.keys(VAR_MAP) as (keyof Palette)[]).forEach((k) => {
@@ -20,10 +18,7 @@ export function applyTheme(theme: Theme | null) {
   if (theme && theme.fx === "xray") root.dataset.fx = "xray";
   else delete root.dataset.fx;
 
-  try {
-    if (theme) localStorage.setItem(THEME_KEY, JSON.stringify(theme));
-    else localStorage.removeItem(THEME_KEY);
-  } catch {}
+  current = theme;
 
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", (theme ?? COBALT).vars.primary);
   window.dispatchEvent(new Event("pm:theme"));

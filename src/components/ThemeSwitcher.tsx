@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { COBALT, generateTheme, type Theme } from "@/content/themes";
@@ -15,7 +15,7 @@ const FX_LABEL = { none: "", xray: "x-ray" } as const;
 /**
  * One button, no menu: press it and the whole site is repainted in a new, random palette, sometimes a dark,
  * glowing "x-ray" one. The new colours spread out from the
- * button like ink in water. The last palette is remembered; the toast has a way back to Cobalt. Only the site's own
+ * button like ink in water. The toast has a way back to Cobalt, and a reload always starts from Cobalt again. Only the site's own
  * colours change: the project pictures always keep theirs.
  */
 export default function ThemeSwitcher() {
@@ -25,14 +25,6 @@ export default function ThemeSwitcher() {
   // Presses alternate: a plain palette, then an x-ray one, then plain again.
   const nextKind = useRef<"plain" | "xray">("plain");
   const faceRef = useRef<HTMLSpanElement>(null);
-
-  // A palette restored before the page painted still needs the browser bar colour.
-  useEffect(() => {
-    const saved = readTheme();
-    nextKind.current = saved && saved.fx !== "xray" ? "xray" : "plain";
-    if (!saved) return;
-    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", saved.vars.primary);
-  }, []);
 
   const change = (e: React.MouseEvent<HTMLElement>, next: Theme | null) => {
     const box = e.currentTarget.getBoundingClientRect();
