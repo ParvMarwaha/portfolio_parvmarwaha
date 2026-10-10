@@ -11,6 +11,7 @@ import Confetti from "@/components/Confetti";
 import { site } from "@/content/site";
 import { THEME_KEY, VAR_MAP, themeCss } from "@/content/themes";
 import PageTransition from "@/components/PageTransition";
+import FaviconAnimator from "@/components/FaviconAnimator";
 
 // Variable font: the weight axis runs 100 to 900, which the cover headline plays with.
 const grotesk = localFont({
@@ -63,6 +64,7 @@ export default function RootLayout({
           <CustomCursor />
           <TopBar />
           <PageTransition />
+          <FaviconAnimator />
           <Confetti />
           {children}
         </SmoothScroll>
