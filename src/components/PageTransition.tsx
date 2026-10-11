@@ -95,7 +95,8 @@ export default function PageTransition() {
         arrived.current = r;
       });
       router.push(href);
-      await Promise.race([there, wait(4000)]);
+      // A page that has to compile first (in development) can take a few seconds; keep the panels up until it is here.
+      await Promise.race([there, wait(10000)]);
       await wait(180); // let the new page paint its first frame
       getLenis()?.resize();
       getLenis()?.scrollTo(0, { immediate: true } as never);
