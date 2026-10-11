@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { Game, LEVELS, setPalette, type GameState, type Sound } from "./engine";
+import { projectHref, projects, projectsOpenOnBehance, getProject } from "@/content/projects";
+import { duckMusic, gameSound, toggleAmbient, useAmbient } from "@/utils/ambient";
+import { Game, LEVELS, setPalette, type GameState } from "./engine";
 
 const BEST_KEY = "pm-break-best";
 // The board's width in game units is fixed; its height follows the shape of your screen (decided once, when the
@@ -11,6 +13,10 @@ const LAND_W = 960;
 const PORT_W = 520;
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 const noop = () => () => {};
+// The score bar above the board, and the gap between it and the board.
+const HUD_H = 56;
+const HUD_GAP = 12;
+const PROJECT_LIST = projects.map(({ slug, title }) => ({ slug, title }));
 
 const toggleFullscreen = (el: HTMLElement | null) => {
   if (!el) return;
@@ -18,7 +24,7 @@ const toggleFullscreen = (el: HTMLElement | null) => {
   else void el.requestFullscreen?.();
 };
 
-const initial: GameState = { score: 0, best: 0, lives: 3, level: 1, levels: LEVELS.length, status: "ready", combo: 0, wide: false };
+const initial: GameState = { score: 0, best: 0, lives: 3, level: 1, levels: LEVELS.length, levelName: LEVELS[0].name, status: "ready", combo: 0, mult: 1, found: [] };
 
 /**
  * Break the Grid, full screen: move the paddle (mouse, touch or arrow keys), click or press Space to launch,
@@ -30,13 +36,11 @@ export default function BreakGame() {
   const stageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameRef = useRef<Game | null>(null);
-  const audioRef = useRef<AudioContext | null>(null);
-  const soundOnRef = useRef(false);
   const bestRef = useRef(0);
 
   const [state, setState] = useState<GameState>(initial);
   const [portrait, setPortrait] = useState(false);
-  const [soundOn, setSoundOn] = useState(false);
+  const soundOn = useAmbient();
   const [paused, setPaused] = useState(false);
   const [fs, setFs] = useState(false);
   const [box, setBox] = useState({ w: 0, h: 0 });
@@ -49,13 +53,14 @@ export default function BreakGame() {
 
   // The board takes the shape of the play area the first time it is measured, and keeps it (so going full
   // screen later does not restart a game in progress).
-  if (box.w > 0 && box.h > 0 && (!lock || lock.portrait !== portrait)) {
-    setLock({ portrait, aspect: portrait ? clamp(box.w / box.h, 0.5, 0.8) : clamp(box.w / box.h, 1.3, 2.2) });
+  const boardH = box.h - HUD_H - HUD_GAP;
+  if (box.w > 0 && boardH > 0 && (!lock || lock.portrait !== portrait)) {
+    setLock({ portrait, aspect: portrait ? clamp(box.w / boardH, 0.5, 0.8) : clamp(box.w / boardH, 1.3, 2.2) });
   }
   const dims = portrait
     ? { w: PORT_W, h: Math.round(PORT_W / (lock?.aspect ?? 0.667)) }
     : { w: LAND_W, h: Math.round(LAND_W / (lock?.aspect ?? 1.6)) };
-  const scale = box.w > 0 ? Math.min(box.w / dims.w, box.h / dims.h) : 0;
+  const scale = box.w > 0 && boardH > 0 ? Math.min(box.w / dims.w, boardH / dims.h) : 0;
 
   useEffect(() => {
     const el = regionRef.current;
@@ -80,29 +85,10 @@ export default function BreakGame() {
     return () => mq.removeEventListener("change", set);
   }, []);
 
-  const playSound = useCallback((kind: Sound) => {
-    if (!soundOnRef.current) return;
-    const ctx = audioRef.current;
-    if (!ctx) return;
-    const tone = (freq: number, dur: number, type: OscillatorType, gain: number, slideTo?: number) => {
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type = type;
-      o.frequency.setValueAtTime(freq, ctx.currentTime);
-      if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
-      g.gain.setValueAtTime(gain, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
-      o.connect(g).connect(ctx.destination);
-      o.start();
-      o.stop(ctx.currentTime + dur);
-    };
-    if (kind === "paddle") tone(220, 0.07, "triangle", 0.09);
-    else if (kind === "brick") tone(520 + Math.random() * 120, 0.09, "square", 0.05);
-    else if (kind === "tough") tone(180, 0.08, "square", 0.05);
-    else if (kind === "wall") tone(300, 0.04, "triangle", 0.04);
-    else if (kind === "power") tone(440, 0.22, "sine", 0.08, 880);
-    else if (kind === "lose") tone(320, 0.45, "sawtooth", 0.06, 70);
-    else tone(520, 0.4, "triangle", 0.08, 1040);
+  // The music steps back a little while you play, so the effects carry.
+  useEffect(() => {
+    duckMusic(0.5);
+    return () => duckMusic(1);
   }, []);
 
   // The board wears the site's colours, and follows them when the theme is changed.
@@ -128,6 +114,7 @@ export default function BreakGame() {
       w: dims.w,
       h: dims.h,
       best,
+      projects: PROJECT_LIST,
       onState: (s) => {
         setState(s);
         if (s.best > bestRef.current) {
@@ -137,7 +124,7 @@ export default function BreakGame() {
           } catch {}
         }
       },
-      onSound: playSound,
+      onSound: gameSound,
     });
     gameRef.current = game;
 
@@ -204,22 +191,11 @@ export default function BreakGame() {
       document.removeEventListener("visibilitychange", onVis);
       gameRef.current = null;
     };
-  }, [dims.w, dims.h, playSound]);
+  }, [dims.w, dims.h]);
 
   const toLogical = (clientX: number) => {
     const r = stageRef.current!.getBoundingClientRect();
     return ((clientX - r.left) / r.width) * dims.w;
-  };
-
-  const toggleSound = () => {
-    const next = !soundOn;
-    setSoundOn(next);
-    soundOnRef.current = next;
-    if (next) {
-      audioRef.current ??= new AudioContext();
-      void audioRef.current.resume();
-      playSound("power");
-    }
   };
 
   const over = state.status === "won" || state.status === "lost";
@@ -228,12 +204,17 @@ export default function BreakGame() {
     ? { width: dims.w * scale, height: dims.h * scale }
     : { width: "100%", aspectRatio: `${dims.w} / ${dims.h}` };
 
+  const slots = Math.max(3, state.lives);
+  const found = state.found.map((slug) => getProject(slug)).filter((x) => x !== undefined);
+  const external = projectsOpenOnBehance();
+
   return (
     <div ref={shellRef} className="fixed inset-0 z-20 select-none overflow-hidden bg-deep text-on-deep">
       {/* The play area: the whole screen, apart from the top bar and a thin strip of controls underneath */}
       <div
         ref={regionRef}
-        className={`absolute inset-x-0 bottom-14 flex touch-none items-center justify-center ${fs ? "top-0" : "top-[4.5rem]"}`}
+        className={`absolute inset-x-3 bottom-14 flex touch-none flex-col items-center justify-center md:inset-x-5 ${fs ? "top-0" : "top-[4.5rem]"}`}
+        style={{ gap: HUD_GAP }}
         onPointerMove={(e) => gameRef.current?.setPointer(toLogical(e.clientX))}
         onPointerDown={(e) => {
           gameRef.current?.setPointer(toLogical(e.clientX));
@@ -241,6 +222,33 @@ export default function BreakGame() {
         }}
         data-cursor-label="Move"
       >
+        {/* Score bar, the same width as the board */}
+        <div className="flex items-center justify-between px-1" style={{ width: shape.width, height: HUD_H }}>
+          <div className="flex items-baseline gap-3">
+            <div>
+              <p className="label opacity-60">Score</p>
+              <p className="mt-1 text-3xl font-medium leading-none tracking-tighter tabular-nums md:text-4xl">{String(state.score).padStart(4, "0")}</p>
+            </div>
+            <p className="label hidden opacity-50 sm:block">Best {String(state.best).padStart(4, "0")}</p>
+          </div>
+          <div className="text-center">
+            <p className="label opacity-60">
+              Level {state.level}/{state.levels}
+            </p>
+            <p className="mt-1 font-display text-xl italic leading-none text-spark md:text-2xl">{state.levelName}</p>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <p className="label opacity-60" title="Project bricks uncovered">
+              ★ {state.found.length}/{projects.length}
+            </p>
+            <p className="flex gap-1.5">
+              {Array.from({ length: slots }, (_, i) => (
+                <span key={i} className={`h-3 w-3 rounded-full ring-1 transition-all ${i < state.lives ? "bg-vermilion ring-vermilion" : "ring-on-deep/40"}`} />
+              ))}
+            </p>
+          </div>
+        </div>
+
         <div
           ref={stageRef}
           className="relative overflow-hidden rounded-[0.875rem] bg-[color-mix(in_srgb,var(--on-deep)_5%,var(--deep))] ring-1 ring-on-deep/15"
@@ -250,30 +258,8 @@ export default function BreakGame() {
         >
           <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
 
-          {/* HUD */}
-          <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between p-4 md:p-6">
-            <div>
-              <p className="label opacity-60">Score</p>
-              <p className="mt-1 text-3xl font-medium leading-none tracking-tighter tabular-nums md:text-4xl">{String(state.score).padStart(4, "0")}</p>
-            </div>
-            <div className="text-center">
-              <p className="label opacity-60">Level</p>
-              <p className="mt-1 text-lg font-medium leading-none tabular-nums md:text-xl">
-                {state.level}/{state.levels}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="label opacity-60">Lives · Best {String(state.best).padStart(4, "0")}</p>
-              <p className="mt-2 flex justify-end gap-1.5">
-                {Array.from({ length: 3 }, (_, i) => (
-                  <span key={i} className={`h-3 w-3 rounded-full ring-1 ring-on-deep/60 ${i < state.lives ? "bg-vermilion ring-vermilion" : ""}`} />
-                ))}
-              </p>
-            </div>
-          </div>
-
           {fresh && !over && (
-            <div className="pointer-events-none absolute inset-x-0 top-[66%] -translate-y-1/2 px-6 text-center">
+            <div className="pointer-events-none absolute inset-x-0 top-[62%] -translate-y-1/2 px-6 text-center">
               <p className="label mb-3 opacity-70">Off hours · a tiny game</p>
               <h2 className="text-6xl font-medium leading-[0.9] tracking-tighter md:text-8xl">
                 Break the <em className="font-display italic text-spark">grid.</em>
@@ -282,14 +268,23 @@ export default function BreakGame() {
                 <span className="hidden md:inline">Move to aim · click or press Space to launch</span>
                 <span className="md:hidden">Drag to move · tap to launch</span>
               </p>
+              <p className="label mx-auto mt-4 max-w-xl leading-relaxed opacity-55">
+                Catch capsules: W wide · x3 more balls · S slow · F fireball · L lasers · +1 life. Break the ★ bricks to uncover my work.
+              </p>
             </div>
           )}
 
           {state.status === "ready" && !fresh && !over && (
-            <p className="label pointer-events-none absolute inset-x-0 bottom-[4.875rem] text-center text-on-deep/80 md:bottom-[5.75rem]">
-              <span className="hidden md:inline">Move to aim · click or press Space to launch</span>
-              <span className="md:hidden">Drag to move · tap to launch</span>
-            </p>
+            <div className="pointer-events-none absolute inset-x-0 top-[74%] -translate-y-1/2 px-6 text-center">
+              <p className="label mb-2 opacity-70">
+                Level {state.level} of {state.levels}
+              </p>
+              <p className="font-display text-4xl italic leading-none text-spark md:text-6xl">{state.levelName}</p>
+              <p className="label mt-4 opacity-80">
+                <span className="hidden md:inline">Move to aim · click or press Space to launch</span>
+                <span className="md:hidden">Drag to move · tap to launch</span>
+              </p>
+            </div>
           )}
 
           {state.status === "clear" && (
@@ -306,7 +301,7 @@ export default function BreakGame() {
 
           {over && (
             <div className="absolute inset-0 flex items-center justify-center bg-deep/85 p-6 backdrop-blur-[2px]">
-              <div className="max-w-sm text-center text-on-deep">
+              <div className="max-w-md text-center text-on-deep">
                 <p className="label mb-4 opacity-70">
                   Score {state.score} · Best {state.best}
                 </p>
@@ -324,6 +319,23 @@ export default function BreakGame() {
                 <p className="mt-4 text-[0.9375rem] leading-snug text-on-deep/75">
                   {state.status === "won" ? "Fine. You can hire me anyway." : "Good run. You could still hire me."}
                 </p>
+                {found.length > 0 && (
+                  <div className="mt-6">
+                    <p className="label mb-2.5 opacity-60">Work you uncovered</p>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {found.map((pr) => (
+                        <a
+                          key={pr.slug}
+                          href={projectHref(pr)}
+                          {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                          className="rounded-full px-3.5 py-1.5 text-[0.8125rem] font-medium tracking-normal ring-1 ring-on-deep/35 transition-colors hover:bg-on-deep hover:text-deep"
+                        >
+                          {pr.title} ↗
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5">
                   <button
                     type="button"
@@ -351,7 +363,8 @@ export default function BreakGame() {
         <span className="flex items-center gap-2 max-md:ml-auto">
           <button
             type="button"
-            onClick={toggleSound}
+            onClick={toggleAmbient}
+            data-sound-toggle
             aria-pressed={soundOn}
             className="whitespace-nowrap rounded-full px-3 py-1.5 ring-1 ring-on-deep/25 transition-colors hover:text-on-deep hover:ring-on-deep/60 md:px-4"
           >

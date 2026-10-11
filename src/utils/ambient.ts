@@ -3,6 +3,7 @@ import { useSyncExternalStore } from "react";
 /**
  * The site's music, made live in the browser (Web Audio), so there is no audio file to load or license.
  * A slow pad moves through four chords in A minor and a few soft plucks wander over it through an echo.
+ * The interface sounds (hover tick, click tock) and the game's effects are synthesised the same way, on their own bus.
  * It is never started without a click; changing the site's colours moves it to a new key.
  */
 
@@ -25,6 +26,9 @@ const VOLUME = 0.4;
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
+let musicOut: GainNode | null = null;
+let sfxOut: GainNode | null = null;
+let noiseBuf: AudioBuffer | null = null;
 let bus: AudioNode | null = null;
 let timer = 0;
 let playing = false;
@@ -45,11 +49,22 @@ function build(): AudioContext {
   master.gain.value = 0;
   master.connect(c.destination);
 
+  // Music and effects have their own level under the one master, so the clicks are never lost under the pad.
+  musicOut = c.createGain();
+  musicOut.gain.value = VOLUME;
+  musicOut.connect(master);
+  sfxOut = c.createGain();
+  sfxOut.gain.value = 1;
+  sfxOut.connect(master);
+  noiseBuf = c.createBuffer(1, c.sampleRate, c.sampleRate);
+  const d = noiseBuf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+
   // One shared echo and a soft low-pass keep everything warm and spacious.
   const tone = c.createBiquadFilter();
   tone.type = "lowpass";
   tone.frequency.value = 2400;
-  tone.connect(master);
+  tone.connect(musicOut);
   const delay = c.createDelay(1);
   delay.delayTime.value = BEAT * 0.75;
   const feedback = c.createGain();
@@ -129,33 +144,168 @@ const fade = (to: number, seconds: number) => {
   master.gain.linearRampToValueAtTime(to, ctx.currentTime + seconds);
 };
 
-/** Tiny interface sounds on the same switch as the music: a soft blip on hover, a tap on press. */
-export function uiSound(kind: "hover" | "click") {
-  if (!playing || !ctx || !master || ctx.state !== "running") return;
-  const t = ctx.currentTime;
+// ---- effects ---------------------------------------------------------------------------------------------
+// Everything below is a short synthesised sound on the effects bus. `pan` is -1 (left) to 1 (right).
+
+const ready = () => !!ctx && !!sfxOut && !!noiseBuf && playing && ctx.state === "running";
+
+function out(pan = 0): AudioNode {
+  if (!ctx || !sfxOut || !ctx.createStereoPanner || pan === 0) return sfxOut!;
+  const p = ctx.createStereoPanner();
+  p.pan.value = Math.max(-1, Math.min(1, pan));
+  p.connect(sfxOut);
+  return p;
+}
+
+/** A pitched blip: `from` slides to `to` Hz over `dur`, with a quick attack and an exponential fade. */
+function blip(type: OscillatorType, from: number, to: number, dur: number, level: number, when = 0, pan = 0, lowpass = 0) {
+  if (!ctx) return;
+  const t = ctx.currentTime + when;
   const o = ctx.createOscillator();
   const g = ctx.createGain();
-  if (kind === "hover") {
-    // A note from the key's scale, so moving across buttons plays a little tune.
-    o.type = "sine";
-    o.frequency.value = hz(PLUCKS[Math.floor(Math.random() * 6)]) * 4;
-    g.gain.setValueAtTime(0, t);
-    g.gain.linearRampToValueAtTime(0.035, t + 0.006);
-    g.gain.exponentialRampToValueAtTime(0.0006, t + 0.16);
-    o.stop(t + 0.18);
-  } else {
-    // A short, round tap that drops in pitch.
-    o.type = "triangle";
-    o.frequency.setValueAtTime(hz(12) * 4, t);
-    o.frequency.exponentialRampToValueAtTime(hz(0) * 2, t + 0.09);
-    g.gain.setValueAtTime(0, t);
-    g.gain.linearRampToValueAtTime(0.12, t + 0.004);
-    g.gain.exponentialRampToValueAtTime(0.0006, t + 0.14);
-    o.stop(t + 0.16);
-  }
+  o.type = type;
+  o.frequency.setValueAtTime(from, t);
+  if (to !== from) o.frequency.exponentialRampToValueAtTime(to, t + dur);
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(level, t + 0.004);
+  g.gain.exponentialRampToValueAtTime(0.0005, t + dur);
   o.connect(g);
-  g.connect(master);
+  let tail: AudioNode = g;
+  if (lowpass) {
+    const f = ctx.createBiquadFilter();
+    f.type = "lowpass";
+    f.frequency.value = lowpass;
+    g.connect(f);
+    tail = f;
+  }
+  tail.connect(out(pan));
   o.start(t);
+  o.stop(t + dur + 0.02);
+}
+
+/** A burst of filtered noise: a click, a crack, a whoosh or a boom depending on the filter. */
+function burst(kind: BiquadFilterType, freq: number, dur: number, level: number, when = 0, pan = 0, sweepTo = 0) {
+  if (!ctx || !noiseBuf) return;
+  const t = ctx.currentTime + when;
+  const n = ctx.createBufferSource();
+  n.buffer = noiseBuf;
+  const f = ctx.createBiquadFilter();
+  f.type = kind;
+  f.frequency.setValueAtTime(freq, t);
+  if (sweepTo) f.frequency.exponentialRampToValueAtTime(sweepTo, t + dur);
+  f.Q.value = kind === "bandpass" ? 1.4 : 0.7;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(level, t + 0.003);
+  g.gain.exponentialRampToValueAtTime(0.0005, t + dur);
+  n.connect(f);
+  f.connect(g);
+  g.connect(out(pan));
+  n.start(t, Math.random() * 0.5);
+  n.stop(t + dur + 0.02);
+}
+
+// Notes the effects can play, in semitones above the key (a minor pentatonic ladder), so they sit with the music.
+const LADDER = [0, 3, 5, 7, 10, 12, 15, 17, 19, 22, 24, 27, 29, 31];
+const tone = (step: number, octave = 2) => hz(LADDER[Math.max(0, Math.min(LADDER.length - 1, step))]) * octave;
+
+/** Interface sounds: a crisp tick when the pointer lands on something pressable, a round tock when it is pressed. */
+export function uiSound(kind: "hover" | "click") {
+  if (!ready()) return;
+  if (kind === "hover") {
+    const step = Math.floor(Math.random() * 6);
+    burst("bandpass", 4200, 0.03, 0.22);
+    blip("sine", tone(step + 5, 2), tone(step + 5, 2), 0.09, 0.16);
+  } else {
+    burst("highpass", 1800, 0.035, 0.3);
+    blip("sine", 920, 260, 0.11, 0.42);
+    blip("triangle", tone(7, 2), tone(7, 2), 0.16, 0.12, 0.012);
+  }
+}
+
+export type GameSound =
+  | "launch"
+  | "paddle"
+  | "wall"
+  | "brick"
+  | "tough"
+  | "boom"
+  | "gold"
+  | "power"
+  | "life"
+  | "laser"
+  | "lose"
+  | "clear"
+  | "won"
+  | "over";
+
+/** Sounds for the game. `n` is the combo for bricks (the notes climb with it) and `pan` is where on the board it happened. */
+export function gameSound(kind: GameSound, pan = 0, n = 0) {
+  if (!ready()) return;
+  const p = pan * 0.7;
+  switch (kind) {
+    case "launch":
+      burst("bandpass", 500, 0.28, 0.18, 0, 0, 3600);
+      blip("sine", tone(0, 2), tone(5, 2), 0.25, 0.2);
+      break;
+    case "paddle":
+      blip("sine", 190, 70, 0.12, 0.55, 0, p);
+      burst("lowpass", 1400, 0.05, 0.3, 0, p);
+      break;
+    case "wall":
+      blip("triangle", 640 + Math.random() * 60, 420, 0.05, 0.16, 0, p);
+      break;
+    case "brick": {
+      // The streak climbs the scale, one note per brick.
+      const step = Math.min(n, LADDER.length - 1);
+      blip("triangle", tone(step, 4), tone(step, 4), 0.34, 0.3, 0, p);
+      blip("sine", tone(step, 8), tone(step, 8), 0.18, 0.1, 0, p);
+      burst("bandpass", 2600, 0.05, 0.28, 0, p);
+      break;
+    }
+    case "tough":
+      blip("square", 240, 150, 0.09, 0.14, 0, p, 1800);
+      burst("bandpass", 1200, 0.06, 0.3, 0, p);
+      break;
+    case "boom":
+      burst("lowpass", 1800, 0.55, 0.9, 0, p, 80);
+      blip("sine", 150, 38, 0.5, 0.7, 0, p);
+      break;
+    case "gold":
+      [0, 5, 9, 12].forEach((s, i) => blip("triangle", tone(s, 4), tone(s, 4), 0.4, 0.24, i * 0.07, p));
+      break;
+    case "power":
+      [0, 2, 5].forEach((s, i) => blip("sine", tone(s + 3, 4), tone(s + 3, 4), 0.2, 0.28, i * 0.06, p));
+      break;
+    case "life":
+      [5, 9, 12, 16].forEach((s, i) => blip("triangle", tone(s, 4), tone(s, 4), 0.3, 0.26, i * 0.09));
+      break;
+    case "laser":
+      blip("square", 1500, 300, 0.12, 0.1, 0, p, 3000);
+      break;
+    case "lose":
+      blip("sawtooth", 420, 55, 0.7, 0.28, 0, 0, 900);
+      blip("sine", 110, 40, 0.6, 0.5);
+      burst("lowpass", 700, 0.4, 0.4, 0, 0, 100);
+      break;
+    case "clear":
+      [0, 3, 5, 7, 10, 12].forEach((s, i) => blip("triangle", tone(s, 4), tone(s, 4), 0.5, 0.24, i * 0.08));
+      break;
+    case "won":
+      [0, 5, 7, 12, 10, 15, 17, 19, 24].forEach((s, i) => blip("triangle", tone(s, 4), tone(s, 4), 0.7, 0.24, i * 0.1));
+      blip("sine", tone(0, 1), tone(0, 1), 1.6, 0.4, 0.2);
+      break;
+    case "over":
+      [7, 5, 3, 0].forEach((s, i) => blip("triangle", tone(s, 2), tone(s, 2), 0.7, 0.26, i * 0.22, 0, 1400));
+      break;
+  }
+}
+
+/** Turn the music down while the game is on so the effects carry (1 = the normal level). */
+export function duckMusic(amount: number) {
+  if (!ctx || !musicOut) return;
+  musicOut.gain.cancelScheduledValues(ctx.currentTime);
+  musicOut.gain.linearRampToValueAtTime(VOLUME * amount, ctx.currentTime + 0.6);
 }
 
 /** `auto`: only start if the browser lets a page make sound unprompted; otherwise quietly give up and say so. */
@@ -166,7 +316,7 @@ export async function startAmbient(auto = false): Promise<boolean> {
     if (auto && ctx.state !== "running") {
       void ctx.close();
       ctx = null;
-      master = null;
+      master = musicOut = sfxOut = noiseBuf = null;
       bus = null;
       return false;
     }
@@ -179,7 +329,7 @@ export async function startAmbient(auto = false): Promise<boolean> {
     window.clearInterval(timer);
     timer = window.setInterval(schedule, 250);
     schedule();
-    fade(VOLUME, 2.5);
+    fade(1, 2.5);
     try {
       localStorage.setItem(KEY, "1");
     } catch {}
@@ -205,7 +355,7 @@ export function stopAmbient() {
     // Drop whatever was queued so a later start begins cleanly.
     void ctx.close();
     ctx = null;
-    master = null;
+    master = musicOut = sfxOut = noiseBuf = null;
     bus = null;
   }, 1200);
 }
@@ -231,7 +381,8 @@ export function startOnLoad() {
     // The sound button has its own say.
     if ((e.target as HTMLElement | null)?.closest?.("[data-sound-toggle]")) return;
     off();
-    void startAmbient();
+    // The press that woke the audio gets its tap too.
+    void startAmbient().then((ok) => ok && e.type === "click" && uiSound("click"));
   };
   let cancelled = false;
   void startAmbient(true).then((started) => {
