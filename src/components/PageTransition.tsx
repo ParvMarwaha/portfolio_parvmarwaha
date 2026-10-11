@@ -64,26 +64,31 @@ export default function PageTransition() {
       const count = { v: 0 };
       if (counterRef.current) counterRef.current.textContent = "000";
       gsap.set(bar, { scaleX: 0 });
+      // The counter and bar belong to the covered screen: they stay invisible until the panels are up, so they
+      // never show over the old page, and they leave before the panels lift so they never show over the new one.
+      const meters = [counterRef.current, bar?.parentElement].filter(Boolean);
+      gsap.set(meters, { opacity: 0 });
       gsap.set(root, { visibility: "visible", pointerEvents: "auto" });
 
       const cover = gsap.timeline();
       cover
+        .fromTo(strips, { scaleY: 0, transformOrigin: "50% 100%" }, { scaleY: 1, duration: 0.6, ease: "expo.inOut", stagger: 0.055 })
+        .fromTo(chars, { yPercent: 115 }, { yPercent: 0, duration: 0.55, ease: "expo.out", stagger: 0.03 }, "-=0.35")
+        .fromTo(caption, { opacity: 0, y: 8 }, { opacity: 0.8, y: 0, duration: 0.4 }, "<")
+        .set(meters, { opacity: 1 }, ">-0.05")
         .to(
           count,
           {
             v: 100,
-            duration: 1,
+            duration: 0.7,
             ease: "power2.inOut",
             onUpdate: () => {
               if (counterRef.current) counterRef.current.textContent = String(Math.round(count.v)).padStart(3, "0");
               gsap.set(bar, { scaleX: count.v / 100 });
             },
           },
-          0
-        )
-        .fromTo(strips, { scaleY: 0, transformOrigin: "50% 100%" }, { scaleY: 1, duration: 0.6, ease: "expo.inOut", stagger: 0.055 })
-        .fromTo(chars, { yPercent: 115 }, { yPercent: 0, duration: 0.55, ease: "expo.out", stagger: 0.03 }, "-=0.35")
-        .fromTo(caption, { opacity: 0, y: 8 }, { opacity: 0.8, y: 0, duration: 0.4 }, "<");
+          "<"
+        );
       await done(cover);
 
       const there = new Promise<void>((r) => {
@@ -99,7 +104,8 @@ export default function PageTransition() {
 
       const lift = gsap.timeline();
       lift
-        .to(chars, { yPercent: -115, duration: 0.4, ease: "expo.in", stagger: 0.015 })
+        .to(meters, { opacity: 0, duration: 0.2, ease: "power1.out" })
+        .to(chars, { yPercent: -115, duration: 0.4, ease: "expo.in", stagger: 0.015 }, "<")
         .to(caption, { opacity: 0, duration: 0.25 }, "<")
         .to(strips, { scaleY: 0, transformOrigin: "50% 0%", duration: 0.65, ease: "expo.inOut", stagger: 0.05 }, "-=0.15");
       await done(lift);
