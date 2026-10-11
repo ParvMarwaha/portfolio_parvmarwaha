@@ -233,7 +233,7 @@ function xray(): Theme {
 
 /**
  * A fresh random theme. Without `kind` it is a surprise (mostly plain, now and then x-ray). The colour button passes
- * `kind` so that its presses alternate: a plain palette, then an x-ray one, then plain again.
+ * `kind` so that its presses alternate: an x-ray palette, then a plain one, then x-ray again.
  */
 export function generateTheme(previous?: string, kind?: "plain" | "xray"): Theme {
   for (let i = 0; i < 6; i++) {

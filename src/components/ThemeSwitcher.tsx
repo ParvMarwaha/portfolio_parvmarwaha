@@ -22,8 +22,8 @@ export default function ThemeSwitcher() {
   const [toast, setToast] = useState<Theme | null>(null);
   const toastTimer = useRef(0);
   const turns = useRef(0);
-  // Presses alternate: a plain palette, then an x-ray one, then plain again.
-  const nextKind = useRef<"plain" | "xray">("plain");
+  // Presses alternate, starting with x-ray: x-ray, then a plain palette, then x-ray again.
+  const nextKind = useRef<"plain" | "xray">("xray");
   const faceRef = useRef<HTMLSpanElement>(null);
 
   const change = (e: React.MouseEvent<HTMLElement>, next: Theme | null) => {
@@ -126,7 +126,7 @@ export default function ThemeSwitcher() {
                 <button
                   type="button"
                   onClick={(e) => {
-                    nextKind.current = "plain";
+                    nextKind.current = "xray";
                     change(e, null);
                   }}
                   className="rounded-full bg-paper px-3 py-1.5 text-[0.75rem] font-semibold text-ink transition-transform hover:scale-[1.04]"
