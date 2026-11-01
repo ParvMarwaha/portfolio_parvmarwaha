@@ -12,13 +12,15 @@ export default function HeroSticky({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
     let raf = 0;
     const update = () => {
       raf = 0;
       const el = innerRef.current;
       if (!el) return;
       const p = Math.min(1, Math.max(0, window.scrollY / (window.innerHeight * 0.85)));
-      el.style.transform = `scale(${1 - p * 0.07}) translate3d(0, ${p * 24}px, 0)`;
+      // Phones skip the shrink: Safari re-draws scaled text every frame, which made scrolling stutter.
+      el.style.transform = coarse ? `translate3d(0, ${p * 24}px, 0)` : `scale(${1 - p * 0.07}) translate3d(0, ${p * 24}px, 0)`;
       // A black sheet fading in dims it the same way a brightness filter would, without re-painting the card.
       if (shadeRef.current) shadeRef.current.style.opacity = String(p * 0.35);
       // Fully covered: stop painting it underneath the page.

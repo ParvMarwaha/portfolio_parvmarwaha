@@ -145,11 +145,15 @@ export default function HeroV7() {
     let boxes: { x: number; w: number; top: number; line: number }[] = [];
     let bridges: typeof boxes = [];
     let boards: { x: number; w: number; top: number }[] = [];
+    // The highest the bubble may go (stage coordinates): just below the fixed top bar.
+    let ceil = -Infinity;
     const measure = () => {
       W = stage.offsetWidth;
       H = stage.offsetHeight;
       const r = stage.getBoundingClientRect();
       scale = W ? r.width / W : 1;
+      const bar = document.querySelector("header")?.getBoundingClientRect().bottom ?? 64;
+      ceil = (bar + 10 - (r.top + window.scrollY)) / scale;
       fs = parseFloat(getComputedStyle(letters[0] ?? stage).fontSize) || fs;
       K = clamp(fs * 0.5, 54, 132);
       kern.style.width = `${K}px`;
@@ -673,6 +677,7 @@ export default function HeroV7() {
     let lastBubble = "";
     // The bubble's width, measured only when it changes: reading it every frame forced a layout per frame.
     let bubW = 0;
+    let bubH = 0;
     const bubRo = new ResizeObserver(() => {
       bubW = 0;
     });
@@ -893,9 +898,14 @@ export default function HeroV7() {
         }
         const bub = bubbleRef.current;
         if (bub) {
-          const bw = bubW || (bubW = bub.offsetWidth);
+          if (!bubW) {
+            bubW = bub.offsetWidth;
+            bubH = bub.offsetHeight;
+          }
+          const bw = bubW;
           const bx = clamp(s.x, bw / 2 + 4, W - bw / 2 - 4);
-          const by = s.y - K * sy - bob - 18;
+          // On a short screen it would reach up under the top bar: keep it below, even if it covers Kern a little.
+          const by = Math.max(s.y - K * sy - bob - 18, ceil + bubH);
           const pos = `${bx.toFixed(0)},${by.toFixed(0)},${bw}`;
           if (pos !== lastBubble) {
             lastBubble = pos;
@@ -1040,7 +1050,7 @@ export default function HeroV7() {
   const ext = projectsOpenOnBehance() ? ({ target: "_blank", rel: "noopener noreferrer" } as const) : {};
   const line = node ? NODES[node] : null;
   const chip =
-    "rounded-full px-3 py-1.5 text-[0.8125rem] font-medium tracking-tight ring-1 ring-paper/30 transition-colors hover:bg-paper hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-butter";
+    "rounded-full px-2.5 py-1.5 text-[0.75rem] font-medium md:px-3 md:text-[0.8125rem] tracking-tight ring-1 ring-paper/30 transition-colors hover:bg-paper hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-butter";
 
   let idx = 0;
   return (
@@ -1050,7 +1060,8 @@ export default function HeroV7() {
     >
       <div className="group/hero mx-auto w-full max-w-[100vw]" data-entered={entered}>
         <section aria-label="Introduction" className="flex h-[calc(100svh-7.5rem)] min-h-[34rem] flex-col justify-between gap-4 md:h-[calc(100svh-8.75rem)]">
-          <div className="label flex items-center justify-between text-paper/70">
+          {/* Desktop only: on a phone the room above the name is Kern's (and its bubble's) */}
+          <div className="label hidden items-center justify-between text-paper/70 md:flex">
             <span>Portfolio · 2026</span>
             <span>India · {time} IST</span>
           </div>
@@ -1083,11 +1094,11 @@ export default function HeroV7() {
             <div ref={confettiRef} className="pointer-events-none absolute inset-0 overflow-visible" aria-hidden />
 
             {/* Kern's speech bubble: what it says, plus reply chips */}
-            <div ref={bubbleRef} className="absolute left-0 top-0 z-20 w-[min(26rem,calc(100vw-2rem))]" aria-live="polite">
+            <div ref={bubbleRef} className="absolute left-0 top-0 z-20 w-[min(26rem,calc(100vw-2rem))] will-change-transform" aria-live="polite">
               {(aside || line) && (
                 <div
                   key={aside ? `a-${aside}` : (node ?? "")}
-                  className="relative rounded-[1.25rem] bg-ink p-4 text-paper shadow-[0_22px_44px_-18px_rgba(0,0,0,0.6)] ring-1 ring-paper/10 motion-safe:animate-[kern-pop_0.34s_cubic-bezier(.2,1.4,.4,1)]"
+                  className="relative rounded-[1.25rem] bg-ink p-3 text-paper md:p-4 shadow-[0_22px_44px_-18px_rgba(0,0,0,0.6)] ring-1 ring-paper/10 motion-safe:animate-[kern-pop_0.34s_cubic-bezier(.2,1.4,.4,1)]"
                 >
                   {aside ? (
                     <p className="text-[0.9375rem] font-medium leading-snug tracking-tight">{aside}</p>
@@ -1146,9 +1157,9 @@ export default function HeroV7() {
                     </>
                   ) : (
                     <>
-                      <p className="text-[0.9375rem] font-medium leading-snug tracking-tight">{line?.text}</p>
+                      <p className="text-[0.875rem] font-medium leading-snug tracking-tight md:text-[0.9375rem]">{line?.text}</p>
                       {line && line.chips.length > 0 && (
-                        <div className="mt-3 flex flex-wrap gap-1.5">
+                        <div className="mt-2.5 flex flex-wrap gap-1.5 md:mt-3">
                           {line.chips.map((c) => (
                             <button key={c.label} type="button" className={chip} onClick={() => choose(c)}>
                               {c.label}
@@ -1161,7 +1172,7 @@ export default function HeroV7() {
                   {/* ask anything: answered by Kern's offline brain */}
                   {!aside && node !== "work" && !(node && node.startsWith("t") && node !== "t4") && (
                     <form
-                      className="mt-3 flex items-center gap-1.5 border-t border-paper/10 pt-3"
+                      className="mt-2.5 flex items-center gap-1.5 border-t border-paper/10 pt-2.5 md:mt-3 md:pt-3"
                       onSubmit={(e) => {
                         e.preventDefault();
                         void ask(draft);
@@ -1175,14 +1186,14 @@ export default function HeroV7() {
                         maxLength={300}
                         placeholder={chat.length ? "Ask something else…" : "Ask Kern anything about Parv…"}
                         aria-label="Ask Kern a question"
-                        className="min-w-0 flex-1 select-text rounded-full bg-paper/10 px-3.5 py-2 text-[0.875rem] text-paper outline-none placeholder:text-paper/45 focus:ring-1 focus:ring-butter"
+                        className="min-w-0 flex-1 select-text rounded-full bg-paper/10 px-3.5 py-1.5 text-base text-paper md:py-2 md:text-[0.875rem] outline-none placeholder:text-paper/45 focus:ring-1 focus:ring-butter"
                         data-cursor-label="Type"
                       />
                       <button
                         type="submit"
                         disabled={thinking || !draft.trim()}
                         aria-label="Send"
-                        className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-butter text-ink transition-opacity disabled:opacity-40"
+                        className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-butter md:h-9 md:w-9 text-ink transition-opacity disabled:opacity-40"
                       >
                         ↑
                       </button>
@@ -1198,7 +1209,7 @@ export default function HeroV7() {
               type="button"
               aria-label="Kern, Parv's design buddy. Press to poke; arrow keys walk."
               data-cursor-label="Grab me"
-              className="absolute left-0 top-0 z-10 cursor-grab touch-none opacity-0 outline-none focus-visible:[&_svg]:drop-shadow-[0_0_0_3px_var(--vermilion)] active:cursor-grabbing"
+              className="absolute left-0 top-0 z-10 cursor-grab touch-none opacity-0 will-change-transform outline-none focus-visible:[&_svg]:drop-shadow-[0_0_0_3px_var(--vermilion)] active:cursor-grabbing"
               style={{ transition: "opacity .3s" }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
@@ -1215,15 +1226,15 @@ export default function HeroV7() {
               </div>
               <span
                 ref={tagRef}
-                className="absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap rounded-[0.1875rem] bg-paper px-1.5 py-0.5 text-[0.625rem] font-medium leading-none tracking-normal text-cobalt tabular-nums"
+                className="absolute left-1/2 top-full mt-1 hidden -translate-x-1/2 whitespace-nowrap md:block rounded-[0.1875rem] bg-paper px-1.5 py-0.5 text-[0.625rem] font-medium leading-none tracking-normal text-cobalt tabular-nums"
               />
             </button>
           </div>
 
           {/* Who, availability and the ways forward: one calm row on desktop, stacked on a phone */}
-          <div className="flex flex-col gap-4 border-t border-paper/20 pt-4 md:flex-row md:items-center md:justify-between md:gap-8 md:pt-5">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-6">
-              <p className="max-w-[24rem] text-balance text-[1.0625rem] font-medium leading-snug tracking-tight text-paper md:text-[1.1875rem]">
+          <div className="flex flex-col gap-3 border-t border-paper/20 pt-3 md:flex-row md:items-center md:justify-between md:gap-8 md:pt-5">
+            <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:gap-6">
+              <p className="max-w-[24rem] text-balance text-[1rem] font-medium leading-snug tracking-tight text-paper md:text-[1.1875rem]">
                 <em className="font-display text-[1.15em] font-normal italic text-butter">Designer</em> for UI/UX, brand identity and motion, who ships the code too.
               </p>
               <p className="flex w-fit items-center gap-2 whitespace-nowrap rounded-full px-3 py-1.5 text-[0.8125rem] font-medium tracking-tight text-paper ring-1 ring-paper/25">
@@ -1234,7 +1245,7 @@ export default function HeroV7() {
                 {site.availability}
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2 md:gap-2.5">
               <Magnetic>
                 <Link
                   ref={hireRef}
@@ -1244,7 +1255,7 @@ export default function HeroV7() {
                     api.current?.react("Ooh, the good button.", 1800, "happy");
                   }}
                   onPointerLeave={() => api.current?.look(null)}
-                  className="block rounded-full bg-vermilion px-6 py-3 text-[0.9375rem] font-semibold tracking-normal text-white transition-transform hover:scale-[1.04]"
+                  className="block rounded-full bg-vermilion px-5 py-2.5 text-[0.875rem] font-semibold md:px-6 md:py-3 md:text-[0.9375rem] tracking-normal text-white transition-transform hover:scale-[1.04]"
                   data-cursor-label="Let's talk"
                 >
                   Hire me ↗
@@ -1259,11 +1270,11 @@ export default function HeroV7() {
                   api.current?.react("His work is right below. I checked, it's good.", 2200);
                 }}
                 onPointerLeave={() => api.current?.look(null)}
-                className="rounded-full px-6 py-3 text-[0.9375rem] font-medium tracking-normal text-paper ring-1 ring-paper/40 transition-colors hover:bg-paper hover:text-cobalt"
+                className="rounded-full px-5 py-2.5 text-[0.875rem] font-medium tracking-normal text-paper ring-1 ring-paper/40 md:px-6 md:py-3 md:text-[0.9375rem] transition-colors hover:bg-paper hover:text-cobalt"
               >
                 See the work ↓
               </button>
-              <button type="button" onClick={copyEmail} className="rounded-full px-4 py-3 text-[0.875rem] font-medium tracking-normal text-paper/70 transition-colors hover:text-paper" data-cursor-label="Copy">
+              <button type="button" onClick={copyEmail} className="rounded-full px-2 py-2.5 text-[0.8125rem] font-medium tracking-normal text-paper/70 md:px-4 md:py-3 md:text-[0.875rem] transition-colors hover:text-paper" data-cursor-label="Copy">
                 {copied ? "Copied ✓" : "Copy email"}
               </button>
             </div>
