@@ -45,8 +45,20 @@ export function usePageEnter() {
       ease: "expo.inOut",
       onComplete: () => router.push(state.href),
     });
+    // On a phone the project page shows its cover whole, under the top bar (see work/[slug]), so the picture lands there.
+    const img = el.querySelector("img");
+    const phone = window.matchMedia("(max-width: 767.98px)").matches;
+    const pic =
+      phone && img?.naturalWidth
+        ? gsap.fromTo(
+            img,
+            { top: 0, height: state.from.height },
+            { top: 128, height: (window.innerWidth * img.naturalHeight) / img.naturalWidth, duration: 0.65, ease: "expo.inOut" }
+          )
+        : null;
     return () => {
       tween.kill();
+      pic?.kill();
     };
   }, [state, router]);
 
@@ -54,7 +66,7 @@ export function usePageEnter() {
 
   const overlay = state ? (
     <div ref={overlayRef} className="pointer-events-none fixed z-[70] overflow-hidden bg-deep">
-      {state.src && <RemoteImage src={state.src} alt="" className="h-full w-full object-cover" />}
+      {state.src && <RemoteImage src={state.src} alt="" className="absolute left-0 top-0 h-full w-full object-cover" />}
     </div>
   ) : null;
 

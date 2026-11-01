@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { site } from "@/content/site";
@@ -85,6 +85,17 @@ const WORK = projects.slice(0, 8);
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 
 
+function KernFace({ setterRef, lookRef }: { setterRef: React.RefObject<((f: Face) => void) | null>; lookRef: React.RefObject<SVGGElement | null> }) {
+  const [face, setFace] = useState<Face>("open");
+  useEffect(() => {
+    setterRef.current = setFace;
+    return () => {
+      setterRef.current = null;
+    };
+  }, [setterRef]);
+  return <KernArt face={face} lookRef={lookRef} />;
+}
+
 export default function HeroV7() {
   const entered = useEntered();
   const time = useIstClock();
@@ -100,7 +111,9 @@ export default function HeroV7() {
   const workRef = useRef<HTMLButtonElement>(null);
   const letterRefs = useRef<(HTMLSpanElement | null)[]>([]);
 
-  const [face, setFace] = useState<Face>("open");
+  // Kern's face lives in its own little component, so a change of expression re-draws Kern, not the whole cover.
+  const faceSet = useRef<((f: Face) => void) | null>(null);
+  const setFace = (f: Face) => faceSet.current?.(f);
   const [node, setNode] = useState<NodeId | null>(null);
   const [aside, setAside] = useState<string | null>(null); // a quick reaction that briefly replaces the line
   const [workIdx, setWorkIdx] = useState(0);
@@ -122,7 +135,11 @@ export default function HeroV7() {
     cheer: () => void;
     listen: (on: boolean) => void;
     act: (a: KernAction) => void;
+    place: () => void;
   } | null>(null);
+  // Phones get a one-line bubble (Kern is the show there, not a chat window); tapping Chat opens the full one.
+  const [compact, setCompact] = useState(false);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -130,6 +147,10 @@ export default function HeroV7() {
     const body = bodyRef.current;
     if (!stage || !kern || !body) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // Phones: no live font-weight (re-laying out the giant name each frame is what made it stutter), a one-line bubble,
+    // and the phone's own tricks instead of a cursor: tilt it and Kern slides, shake it and Kern hops, tap the name and
+    // Kern runs there.
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
     const letters = letterRefs.current.filter((e): e is HTMLSpanElement => !!e);
     const ox = letters.map(() => 0); // horizontal push on each letter (springs)
     const ov = letters.map(() => 0);
@@ -147,7 +168,10 @@ export default function HeroV7() {
     let boards: { x: number; w: number; top: number }[] = [];
     // The highest the bubble may go (stage coordinates): just below the fixed top bar.
     let ceil = -Infinity;
+    // How far the cover scrolls before it holds (HeroSticky): more than nothing only when it is taller than the screen.
+    let coverLift = 0;
     const measure = () => {
+      coverLift = Math.max(0, (document.querySelector<HTMLElement>("[data-hero-sticky]")?.offsetHeight ?? 0) - window.innerHeight);
       W = stage.offsetWidth;
       H = stage.offsetHeight;
       const r = stage.getBoundingClientRect();
@@ -155,7 +179,8 @@ export default function HeroV7() {
       const bar = document.querySelector("header")?.getBoundingClientRect().bottom ?? 64;
       ceil = (bar + 10 - (r.top + window.scrollY)) / scale;
       fs = parseFloat(getComputedStyle(letters[0] ?? stage).fontSize) || fs;
-      K = clamp(fs * 0.5, 54, 132);
+      // On a phone the name is small, so Kern gets a bigger share of it: it is the thing to play with there.
+      K = clamp(fs * (W < 640 ? 0.78 : 0.5), 54, 132);
       kern.style.width = `${K}px`;
       kern.style.height = `${K}px`;
       const ctx = document.createElement("canvas").getContext("2d");
@@ -188,9 +213,16 @@ export default function HeroV7() {
     };
     measure();
 
+    // Built at most once a frame: floorAt runs several times per frame, and a fresh array each time was garbage that
+    // the phone had to collect mid-animation.
+    let surf: { x: number; w: number; top: number }[] = [];
+    let surfAt = -1;
     const surfaces = () => {
-      const out = boxes.map((b, i) => ({ x: b.x + ox[i], w: b.w, top: b.top }));
-      return out.concat(bridges.map((b) => ({ x: b.x, w: b.w, top: b.top })), boards);
+      const now = performance.now();
+      if (now - surfAt < 4) return surf;
+      surfAt = now;
+      surf = boxes.map((b, i) => ({ x: b.x + ox[i], w: b.w, top: b.top })).concat(bridges, boards);
+      return surf;
     };
     // The highest surface under Kern that is not above it: a letter top, a word space, or the stage floor.
     const floorAt = (x: number, fromY: number) => {
@@ -210,6 +242,8 @@ export default function HeroV7() {
       y: 0,
       vx: 0,
       vy: 0,
+      sv: 0, // sliding speed along the letters when the phone is tilted
+      dash: false, // running to a tapped spot (a little faster than a stroll)
       mode: "hidden" as "hidden" | "ground" | "air" | "held",
       sq: 0,
       sqv: 0,
@@ -242,7 +276,7 @@ export default function HeroV7() {
     // Where the cursor is, how fast it moves, and since when it has been resting (Kern only walks over to a cursor that
     // has settled, so it doesn't chase every twitch).
     const pointer = { x: 0, y: 0, inside: false, vx: 0, speed: 0, t: 0, restSince: 0, leftAt: 0, lastX: 0, lastY: 0 };
-    const held = { dx: 0, dy: 0, lastX: 0, lastY: 0, lastT: 0, downX: 0, downY: 0, downT: 0, moved: false, id: -1, ax: 0 };
+    const held = { dx: 0, dy: 0, lastX: 0, lastY: 0, lastT: 0, downX: 0, downY: 0, downT: 0, moved: false, id: -1, ax: 0, hist: [] as { x: number; y: number; t: number }[] };
 
     // Put Kern back on top of whatever is under it when the layout changes, instead of letting it fall through.
     const ro = new ResizeObserver(() => {
@@ -477,6 +511,12 @@ export default function HeroV7() {
     };
 
     api.current = {
+      // New words in the bubble: measure and place it before the browser paints, not on the next animation frame
+      // (that frame can come late on a busy phone, and the bubble showed up half off screen, then jumped).
+      place: () => {
+        bubW = 0;
+        placeBubble();
+      },
       poke,
       react,
       look: (el) => {
@@ -536,6 +576,18 @@ export default function HeroV7() {
     const enter = () => {
       if (didEnter || !W) return;
       didEnter = true;
+      // The name rises in first (CSS, see .v7-in); Kern drops onto it once the letters have nearly landed, measured
+      // where they actually are, and they are measured once more after the last one settles.
+      if (reduced) drop();
+      else {
+        later(() => {
+          measure();
+          drop();
+        }, 950);
+        later(measure, 1800);
+      }
+    };
+    const drop = () => {
       const b = boxes[1] ?? boxes[0];
       s.x = b ? b.x + b.w / 2 : W * 0.3;
       s.y = reduced ? floorAt(s.x, -Infinity) : K * 0.6;
@@ -563,7 +615,12 @@ export default function HeroV7() {
       const r = stage.getBoundingClientRect();
       return { x: (e.clientX - r.left) / scale, y: (e.clientY - r.top) / scale };
     };
+    // One move reaches Kern, the stage and the window (three listeners). Handled once: counting it three times made the
+    // throw speed come out wrong (a second copy of the same move reads as "stopped"), so drags and flings felt off.
+    let lastEv: Event | null = null;
     const onMove = (e: PointerEvent) => {
+      if (e === lastEv) return;
+      lastEv = e;
       const p = local(e);
       const now = performance.now();
       const pdt = Math.max(8, now - pointer.t) / 1000;
@@ -583,11 +640,15 @@ export default function HeroV7() {
       if (held.id === e.pointerId) {
         if (Math.hypot(e.clientX - held.downX, e.clientY - held.downY) > 5) held.moved = true;
         const now = performance.now();
-        const dt = Math.max(1, now - held.lastT) / 1000;
-        const nvx = s.vx * 0.5 + ((p.x - held.lastX) / dt) * 0.5;
-        held.ax = held.ax * 0.6 + ((nvx - s.vx) / dt) * 0.4;
+        // Throw speed from where the finger was over the last ~90ms, not from one jittery step.
+        held.hist.push({ x: p.x, y: p.y, t: now });
+        while (held.hist.length > 2 && now - held.hist[0].t > 90) held.hist.shift();
+        const a = held.hist[0];
+        const span = Math.max(16, now - a.t) / 1000;
+        const nvx = (p.x - a.x) / span;
+        held.ax = held.ax * 0.6 + ((nvx - s.vx) / Math.max(0.008, (now - held.lastT) / 1000)) * 0.4;
         s.vx = nvx;
-        s.vy = s.vy * 0.5 + ((p.y - held.lastY) / dt) * 0.5;
+        s.vy = (p.y - a.y) / span;
         held.lastX = p.x;
         held.lastY = p.y;
         held.lastT = now;
@@ -607,7 +668,21 @@ export default function HeroV7() {
       e.preventDefault();
       kern.setPointerCapture(e.pointerId);
       const p = local(e);
-      Object.assign(held, { id: e.pointerId, moved: false, downX: e.clientX, downY: e.clientY, downT: performance.now(), dx: s.x - p.x, dy: s.y - p.y, lastX: p.x, lastY: p.y, lastT: performance.now() });
+      Object.assign(held, {
+        id: e.pointerId,
+        moved: false,
+        downX: e.clientX,
+        downY: e.clientY,
+        downT: performance.now(),
+        dx: s.x - p.x,
+        dy: s.y - p.y,
+        lastX: p.x,
+        lastY: p.y,
+        lastT: performance.now(),
+        hist: [{ x: p.x, y: p.y, t: performance.now() }],
+      });
+      pointer.x = p.x;
+      pointer.y = p.y;
       if (!reduced) {
         s.mode = "held";
         s.wv = 0;
@@ -631,6 +706,11 @@ export default function HeroV7() {
       const quick = !held.moved && performance.now() - held.downT < 350;
       if (s.mode === "held") {
         s.mode = "air";
+        // The finger stopped before it let go: a drop, not a throw.
+        if (performance.now() - held.lastT > 80) {
+          s.vx *= 0.15;
+          s.vy *= 0.15;
+        }
         s.vx = clamp(s.vx, -2600, 2600);
         s.vy = clamp(s.vy, -2600, 2600);
         if (quick) {
@@ -642,6 +722,7 @@ export default function HeroV7() {
         }
       }
       if (quick) poke();
+      askTilt();
     };
     const onUp = (e: PointerEvent) => release(e.pointerId);
     const onLost = (e: PointerEvent) => release(e.pointerId);
@@ -661,6 +742,96 @@ export default function HeroV7() {
     };
     window.addEventListener("pointermove", onWinMove);
 
+    // ---- phone: tilt to slide, shake to hop, tap the name to send Kern there
+    let tilt = 0; // -1 (tipped left) … 1 (tipped right)
+    let tiltOn = false;
+    let tiltSaid = false;
+    let shakeAt = 0;
+    const onOrient = (e: DeviceOrientationEvent) => {
+      if (e.gamma == null || e.beta == null) return;
+      tiltOn = true;
+      const a = screen.orientation?.angle ?? 0;
+      const raw = a === 90 ? e.beta : a === 270 || a === -90 ? -e.beta : a === 180 ? -e.gamma : e.gamma;
+      tilt = clamp(raw / 32, -1, 1);
+    };
+    const onMotion = (e: DeviceMotionEvent) => {
+      const m = e.acceleration;
+      if (!m || reduced) return;
+      const now = performance.now();
+      if (Math.hypot(m.x ?? 0, m.y ?? 0, m.z ?? 0) < 20 || now - shakeAt < 1300 || s.mode === "held" || s.mode === "hidden") return;
+      shakeAt = now;
+      s.lastInput = now;
+      s.sleeping = false;
+      s.targetX = null;
+      jump(0.75 + Math.random() * 0.4);
+      s.vx = (Math.random() - 0.5) * 500;
+      s.rotv += (Math.random() - 0.5) * 24;
+      hit(s.x, 1);
+      react(pick(["Earthquake!!", "Whoa, who moved the grid?", "Okay okay, I'm awake!", "My layers! My layers!"]), 1600, "wow");
+    };
+    const listenTilt = () => {
+      window.addEventListener("deviceorientation", onOrient);
+      window.addEventListener("devicemotion", onMotion);
+    };
+    type AskPerm = { requestPermission?: () => Promise<"granted" | "denied"> };
+    const askOrient = (window.DeviceOrientationEvent as unknown as AskPerm | undefined)?.requestPermission;
+    const askMotion = (window.DeviceMotionEvent as unknown as AskPerm | undefined)?.requestPermission;
+    // Tilt is on from the start. Android just hands the sensors over; an iPhone only asks for them during a tap, so the
+    // first touch on the cover (Kern, the name, the bubble) asks once, and from then on tilting just works.
+    if (coarse && !askOrient && "DeviceOrientationEvent" in window) listenTilt();
+    let asked = false;
+    const askTilt = () => {
+      if (asked || !coarse || tiltOn || !askOrient) return;
+      asked = true;
+      Promise.all([askOrient.call(window.DeviceOrientationEvent), askMotion?.call(window.DeviceMotionEvent)])
+        .then(([o]) => {
+          if (o !== "granted") return;
+          listenTilt();
+          tiltSaid = true;
+          later(() => react("Psst. Tilt your phone. Gently!", 2600, "wow"), 900);
+        })
+        .catch(() => {});
+    };
+    stage.addEventListener("click", askTilt);
+    later(() => {
+      setCompact(coarse);
+    }, 0);
+
+    const tap = { id: -1, x: 0, y: 0, t: 0 };
+    let lookPt: { x: number; y: number; until: number } | null = null;
+    const onStageDown = (e: PointerEvent) => {
+      if (e.pointerType === "mouse" || kern.contains(e.target as Node) || bubbleRef.current?.contains(e.target as Node)) return;
+      Object.assign(tap, { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now() });
+    };
+    const onStageUp = (e: PointerEvent) => {
+      if (e.pointerId !== tap.id) return;
+      tap.id = -1;
+      const now = performance.now();
+      if (Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 10 || now - tap.t > 400 || reduced) return;
+      askTilt();
+      if (s.mode !== "ground" || s.busy) return;
+      const p = local(e);
+      s.lastInput = now;
+      lookPt = { x: p.x, y: p.y, until: now + 1400 };
+      if (s.sleeping) {
+        s.sleeping = false;
+        setF("wow", 900);
+      }
+      if (Math.abs(p.x - s.x) < K * 0.6) {
+        jump(0.6);
+        return;
+      }
+      s.dash = true;
+      walkTo(p.x);
+      if (Math.random() < 0.35) react(pick(["On my way!", "Coming!", "There? Okay!", "Zoom."]), 1200, "happy");
+    };
+    const onStageCancel = () => {
+      tap.id = -1;
+    };
+    stage.addEventListener("pointerdown", onStageDown);
+    stage.addEventListener("pointerup", onStageUp);
+    stage.addEventListener("pointercancel", onStageCancel);
+
     let visible = true;
     const io = new IntersectionObserver(([en]) => {
       visible = en.isIntersecting;
@@ -678,17 +849,43 @@ export default function HeroV7() {
     // The bubble's width, measured only when it changes: reading it every frame forced a layout per frame.
     let bubW = 0;
     let bubH = 0;
+    // Kern's last squash and bob, so the bubble can also be placed between frames (see `place`).
+    let bubSy = 1;
+    let bubBob = 0;
+    const placeBubble = () => {
+      const bub = bubbleRef.current;
+      if (!bub || s.mode === "hidden") return;
+      if (!bubW) {
+        bubW = bub.offsetWidth;
+        bubH = bub.offsetHeight;
+      }
+      const bw = bubW;
+      const bx = clamp(s.x, bw / 2 + 4, W - bw / 2 - 4);
+      // On a short screen it would reach up under the top bar: keep it below, even if it covers Kern a little.
+      const by = Math.max(s.y - K * bubSy - bubBob - 18, ceil + bubH);
+      const pos = `${bx.toFixed(0)},${by.toFixed(0)},${bw}`;
+      if (pos !== lastBubble) {
+        lastBubble = pos;
+        bub.style.transform = `translate3d(${bx.toFixed(1)}px, ${by.toFixed(1)}px, 0) translate(-50%, -100%)`;
+        bub.style.setProperty("--tail", `${clamp(s.x - bx + bw / 2, 18, bw - 18).toFixed(0)}px`);
+      }
+    };
     const bubRo = new ResizeObserver(() => {
       bubW = 0;
     });
     if (bubbleRef.current) bubRo.observe(bubbleRef.current);
-    // Phones: no live font-weight (re-laying out the giant name each frame is what made it stutter).
-    const coarse = window.matchMedia("(pointer: coarse)").matches;
     const G = 2600;
+    // SVG attributes are written only when they change: each write re-draws Kern, and most frames nothing moved.
+    const setA = (el: Element | null, name: string, v: string) => {
+      if (el && el.getAttribute(name) !== v) el.setAttribute(name, v);
+    };
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
       // Paused when off screen, in a background tab, or covered by the page sliding up over the (sticky) cover.
-      if (!visible || document.hidden || window.scrollY > window.innerHeight) {
+      // On a phone it holds still as soon as the page starts to scroll, so the swipe gets the whole frame (not while
+      // someone is typing to it: the keyboard coming up scrolls the page too).
+      const still = coarse && window.scrollY > coverLift + 8 && document.activeElement?.tagName !== "INPUT";
+      if (!visible || document.hidden || window.scrollY > coverLift + window.innerHeight || still) {
         last = now;
         return;
       }
@@ -737,12 +934,13 @@ export default function HeroV7() {
           if (Math.abs(d) < 3 && Math.abs(s.wv) < 40) {
             s.targetX = null;
             s.wv = 0;
+            s.dash = false;
             const cb = s.onArrive;
             s.onArrive = null;
             cb?.();
           } else {
             s.facing = Math.sign(d) || s.facing;
-            const top = s.busy ? 280 : 200;
+            const top = s.busy || s.dash ? 300 : 200;
             const want = Math.sign(d) * Math.min(top, Math.abs(d) * 4 + 20);
             s.wv += (want - s.wv) * Math.min(1, dt * (Math.abs(want) > Math.abs(s.wv) ? 5 : 9));
             const step = Math.abs(s.wv * dt) > Math.abs(d) ? d : s.wv * dt;
@@ -760,8 +958,10 @@ export default function HeroV7() {
         }
 
         if (s.mode === "held") {
-          s.x += (pointer.x + held.dx - s.x) * Math.min(1, dt * 22);
-          s.y += (pointer.y + held.dy - s.y) * Math.min(1, dt * 22);
+          // Under a finger it sticks to it exactly; behind a cursor a touch of lag reads as weight.
+          const follow = coarse ? 1 : Math.min(1, dt * 22);
+          s.x += (pointer.x + held.dx - s.x) * follow;
+          s.y += (pointer.y + held.dy - s.y) * follow;
           s.rotv += (clamp(s.vx * 0.01 - held.ax * 0.0025, -32, 32) - s.rot) * dt * 26;
           s.sq += (-0.12 - s.sq) * dt * 10;
         } else if (s.mode === "air") {
@@ -770,8 +970,15 @@ export default function HeroV7() {
           const prevY = s.y;
           s.y += s.vy * dt;
           s.vx *= 1 - dt * 0.4;
+          if (tiltOn && !reduced) s.vx += tilt * 900 * dt;
           if (s.x < K / 2 || s.x > W - K / 2) {
             s.x = clamp(s.x, K / 2, W - K / 2);
+            // Thrown hard into the edge: a bonk, a wobble, and sometimes a complaint.
+            if (Math.abs(s.vx) > 900) {
+              thud(Math.abs(s.vx));
+              s.rotv -= Math.sign(s.vx) * 16;
+              if (Math.random() < 0.5) react(pick(["Ow. Margins.", "Hit the bleed!", "That's the safe area, ow."]), 1400, "dizzy");
+            }
             s.vx *= -0.5;
           }
           if (s.y < -K * 2) s.y = -K * 2;
@@ -793,11 +1000,47 @@ export default function HeroV7() {
             s.spin = 0;
           }
         } else if (s.mode === "ground") {
+          // Tilted phone: Kern slides downhill along the letters, hops up a taller one, tumbles off the end of a word.
+          if (tiltOn && !reduced && !s.busy) {
+            if (Math.abs(tilt) > 0.16) {
+              s.targetX = null;
+              s.sleeping = false;
+              s.lastInput = now;
+              s.sv += (tilt - Math.sign(tilt) * 0.16) * 1700 * dt;
+              if (!tiltSaid && Math.abs(s.sv) > 120) {
+                tiltSaid = true;
+                react("Wheee, I'm sliiiding!", 1600, "wow");
+              }
+            }
+            s.sv *= 1 - Math.min(1, dt * 2.6);
+            if (Math.abs(s.sv) > 6) {
+              s.facing = Math.sign(s.sv);
+              let nx = s.x + s.sv * dt;
+              if (nx < K / 2 || nx > W - K / 2) {
+                nx = clamp(nx, K / 2, W - K / 2);
+                if (Math.abs(s.sv) > 260) {
+                  thud(Math.abs(s.sv) * 2);
+                  s.sq = 0.3;
+                  s.rotv -= Math.sign(s.sv) * 10;
+                }
+                s.sv *= -0.35;
+              }
+              const up = floorAt(nx, s.y - K * 0.9);
+              if (up < s.y - 6) {
+                s.mode = "air";
+                s.vy = -Math.sqrt(2 * G * (s.y - up + K * 0.3));
+                s.vx = s.sv;
+                s.sv = 0;
+              } else s.x = nx;
+              if (Math.random() < dt * 6) hit(s.x, 0.4);
+            } else s.sv = 0;
+          }
           const f = floorAt(s.x, s.y - 4);
           if (f > s.y + 6) {
             s.mode = "air";
             s.vy = 0;
-            s.vx = s.facing * 90;
+            s.vx = Math.abs(s.sv) > 90 ? s.sv : s.facing * 90;
+            s.sv = 0;
           } else s.y = f;
           hit(s.x, 0.55);
         }
@@ -821,14 +1064,15 @@ export default function HeroV7() {
         const wig = s.wiggleT > 0 ? Math.sin(s.wiggleT * 40) * 8 * s.wiggleT : 0;
         const breathe = s.sleeping ? Math.sin(now / 700) * 0.03 : walking ? 0 : Math.sin(now / 900) * 0.012;
         const curious = s.mode === "ground" && !walking && pointer.inside ? clamp((pointer.x - s.x) / Math.max(1, W) * 14, -5, 5) : 0;
-        const rot = s.rot + wig + s.spin * 360 + (walking ? Math.sin(s.walkT) * 3 + s.wv * 0.025 : curious);
+        const lean = s.mode === "ground" ? clamp(-s.sv * 0.03, -12, 12) : 0;
+        const rot = s.rot + wig + s.spin * 360 + lean + (walking ? Math.sin(s.walkT) * 3 + s.wv * 0.025 : curious);
         kern.style.transform = `translate3d(${(s.x - K / 2).toFixed(1)}px, ${(s.y - K - bob).toFixed(1)}px, 0)`;
         body.style.transform = `rotate(${rot.toFixed(1)}deg) scale(${(sx - breathe).toFixed(3)}, ${(sy + breathe).toFixed(3)})`;
 
         // limbs: feet step, hands follow the pose (the arms are drawn from the frame corners to the hands)
         const step = walking ? Math.sin(s.walkT) * 6 : 0;
-        feet.l?.setAttribute("transform", `translate(0 ${Math.min(0, step).toFixed(1)})`);
-        feet.r?.setAttribute("transform", `translate(0 ${Math.min(0, -step).toFixed(1)})`);
+        setA(feet.l, "transform", `translate(0 ${Math.min(0, step).toFixed(1)})`);
+        setA(feet.r, "transform", `translate(0 ${Math.min(0, -step).toFixed(1)})`);
         let hl = [0, 0];
         let hr = [0, 0];
         const t = now / 1000;
@@ -844,17 +1088,21 @@ export default function HeroV7() {
           hr = [8, 34];
           hl = [-2, 4];
         }
-        hands.l?.setAttribute("transform", `translate(${hl[0].toFixed(1)} ${hl[1].toFixed(1)})`);
-        hands.r?.setAttribute("transform", `translate(${hr[0].toFixed(1)} ${hr[1].toFixed(1)})`);
-        arms.l?.setAttribute("x2", String(-4 + hl[0]));
-        arms.l?.setAttribute("y2", String(-4 + hl[1]));
-        arms.r?.setAttribute("x2", String(104 + hr[0]));
-        arms.r?.setAttribute("y2", String(-4 + hr[1]));
+        setA(hands.l, "transform", `translate(${hl[0].toFixed(1)} ${hl[1].toFixed(1)})`);
+        setA(hands.r, "transform", `translate(${hr[0].toFixed(1)} ${hr[1].toFixed(1)})`);
+        setA(arms.l, "x2", (-4 + hl[0]).toFixed(1));
+        setA(arms.l, "y2", (-4 + hl[1]).toFixed(1));
+        setA(arms.r, "x2", (104 + hr[0]).toFixed(1));
+        setA(arms.r, "y2", (-4 + hr[1]).toFixed(1));
 
         // eyes follow the cursor, or whatever Kern is curious about
         let lx = pointer.x;
         let ly = pointer.y;
-        if (s.lookAt) {
+        const tapped = lookPt && now < lookPt.until;
+        if (tapped && lookPt) {
+          lx = lookPt.x;
+          ly = lookPt.y;
+        } else if (s.lookAt) {
           const r = s.lookAt.getBoundingClientRect();
           const sr = stage.getBoundingClientRect();
           lx = (r.left + r.width / 2 - sr.left) / scale;
@@ -865,7 +1113,7 @@ export default function HeroV7() {
         const dl = Math.hypot(dx, dy) || 1;
         let tx = 0;
         let ty = 0;
-        if (pointer.inside || s.lookAt || now - pointer.leftAt < 1200) {
+        if (pointer.inside || s.lookAt || tapped || now - pointer.leftAt < 1200) {
           const reach = 3.2 * Math.min(1, dl / (K * 0.8)); // a cursor right on top of Kern makes it look almost straight on
           tx = (dx / dl) * reach;
           ty = (dy / dl) * reach;
@@ -877,12 +1125,18 @@ export default function HeroV7() {
           }
           tx = s.idleLook.x;
           ty = s.idleLook.y;
+          // tilting: it looks where it is about to slide
+          if (tiltOn && Math.abs(tilt) > 0.16) {
+            tx = Math.sign(tilt) * 3.2;
+            ty = 1.2;
+          }
         }
         // eyes move fast (a saccade), not a drift
         const ek = Math.min(1, dt * 18);
         s.look.x += (tx - s.look.x) * ek;
         s.look.y += (ty - s.look.y) * ek;
-        kern.querySelectorAll("[data-pupil]").forEach((p) => p.setAttribute("transform", `translate(${s.look.x.toFixed(2)} ${s.look.y.toFixed(2)})`));
+        const eyes = `translate(${s.look.x.toFixed(1)} ${s.look.y.toFixed(1)})`;
+        kern.querySelectorAll("[data-pupil]").forEach((p) => setA(p, "transform", eyes));
         if (lookRef.current) {
           const blink = now > s.blinkAt && now < s.blinkAt + 130;
           if (now > s.blinkAt + 130) s.blinkAt = now + 2200 + Math.random() * 3800;
@@ -896,23 +1150,9 @@ export default function HeroV7() {
           lastTag = tag;
           tagEl.textContent = tag;
         }
-        const bub = bubbleRef.current;
-        if (bub) {
-          if (!bubW) {
-            bubW = bub.offsetWidth;
-            bubH = bub.offsetHeight;
-          }
-          const bw = bubW;
-          const bx = clamp(s.x, bw / 2 + 4, W - bw / 2 - 4);
-          // On a short screen it would reach up under the top bar: keep it below, even if it covers Kern a little.
-          const by = Math.max(s.y - K * sy - bob - 18, ceil + bubH);
-          const pos = `${bx.toFixed(0)},${by.toFixed(0)},${bw}`;
-          if (pos !== lastBubble) {
-            lastBubble = pos;
-            bub.style.transform = `translate3d(${bx.toFixed(1)}px, ${by.toFixed(1)}px, 0) translate(-50%, -100%)`;
-            bub.style.setProperty("--tail", `${clamp(s.x - bx + bw / 2, 18, bw - 18).toFixed(0)}px`);
-          }
-        }
+        bubSy = sy;
+        bubBob = bob;
+        placeBubble();
       }
 
       // letters: spring their push, and set weight from the cursor and Kern's pressure
@@ -958,6 +1198,12 @@ export default function HeroV7() {
       window.removeEventListener("blur", onBlur);
       window.removeEventListener("pointermove", onWinMove);
       kern.removeEventListener("lostpointercapture", onLost);
+      window.removeEventListener("deviceorientation", onOrient);
+      window.removeEventListener("devicemotion", onMotion);
+      stage.removeEventListener("pointerdown", onStageDown);
+      stage.removeEventListener("pointerup", onStageUp);
+      stage.removeEventListener("pointercancel", onStageCancel);
+      stage.removeEventListener("click", askTilt);
       api.current = null;
     };
   }, []);
@@ -966,16 +1212,25 @@ export default function HeroV7() {
     if (entered) kernRef.current?.dispatchEvent(new Event("kern:enter"));
   }, [entered]);
 
+  useLayoutEffect(() => {
+    api.current?.place();
+  }, [node, aside, open, compact, workIdx, chat, thinking]);
+
   // While the bubble offers choices, Kern stands still and listens.
+  const mini = compact && !open;
   useEffect(() => {
     nodeRef.current = node;
-    const asking = node === "work" || (node !== null && NODES[node].chips.length > 0);
+    // The one-line phone bubble asks nothing, so Kern keeps playing.
+    const asking = !mini && (node === "work" || (node !== null && NODES[node].chips.length > 0));
     api.current?.listen(asking);
-    if (!asking || typing || thinking) return;
+    if ((!asking && !(mini && node)) || typing || thinking) return;
     // Nobody answered: tuck the bubble away and let Kern get on with its day (poking Kern brings it back).
-    const t = window.setTimeout(() => setNode(null), 20000);
+    const t = window.setTimeout(() => {
+      setNode(null);
+      setOpen(false);
+    }, mini ? 25000 : 20000);
     return () => window.clearTimeout(t);
-  }, [node, workIdx, typing, thinking, chat]);
+  }, [node, workIdx, typing, thinking, chat, mini]);
 
   const copyEmail = async () => {
     try {
@@ -1075,15 +1330,16 @@ export default function HeroV7() {
                   {ln.split("").map((ch) => {
                     const i = idx++;
                     return (
-                      <span
-                        key={i}
-                        ref={(el) => {
-                          letterRefs.current[i] = el;
-                        }}
-                        className="inline-block will-change-transform"
-                        style={{ fontWeight: 420 }}
-                      >
-                        {ch}
+                      <span key={i} className="v7-in inline-block" style={{ "--d": `${(0.1 + i * 0.045).toFixed(3)}s` } as React.CSSProperties}>
+                        <span
+                          ref={(el) => {
+                            letterRefs.current[i] = el;
+                          }}
+                          className="inline-block will-change-transform"
+                          style={{ fontWeight: 420 }}
+                        >
+                          {ch}
+                        </span>
                       </span>
                     );
                   })}
@@ -1094,12 +1350,58 @@ export default function HeroV7() {
             <div ref={confettiRef} className="pointer-events-none absolute inset-0 overflow-visible" aria-hidden />
 
             {/* Kern's speech bubble: what it says, plus reply chips */}
-            <div ref={bubbleRef} className="absolute left-0 top-0 z-20 w-[min(26rem,calc(100vw-2rem))] will-change-transform" aria-live="polite">
-              {(aside || line) && (
+            <div
+              ref={bubbleRef}
+              className={`absolute left-0 top-0 z-20 will-change-transform ${mini ? "w-max max-w-[calc(100vw-2rem)]" : "w-[min(26rem,calc(100vw-2rem))]"}`}
+              aria-live="polite"
+            >
+              {mini && (aside || line) && (
+                <div
+                  key={aside ? `a-${aside}` : `m-${node ?? ""}`}
+                  className="relative flex max-w-[19rem] flex-col items-start gap-2 rounded-[1.1rem] bg-ink px-3.5 py-2.5 text-paper shadow-[0_18px_36px_-16px_rgba(0,0,0,0.6)] ring-1 ring-paper/10 motion-safe:animate-[kern-pop_0.34s_cubic-bezier(.2,1.4,.4,1)]"
+                >
+                  <p className="text-[0.875rem] font-medium leading-snug tracking-tight">
+                    {aside ??
+                      (node && node.startsWith("t")
+                        ? line?.text
+                        : node === "hello"
+                          ? "Hi, I'm Kern! Fling me, or tap the name."
+                          : node === "back"
+                            ? "You're back! Toss me around."
+                            : "Still here. Want to keep chatting?")}
+                  </p>
+                  {!aside && (
+                    <span className="flex gap-1.5">
+                      <button
+                        type="button"
+                        className={`${chip} bg-butter text-ink ring-0`}
+                        onClick={() => {
+                          uiSound("click");
+                          setOpen(true);
+                        }}
+                      >
+                        Chat
+                      </button>
+                    </span>
+                  )}
+                  <span className="absolute -bottom-1.5 h-3 w-3 -translate-x-1/2 rotate-45 bg-ink" style={{ left: "var(--tail, 50%)" }} />
+                </div>
+              )}
+              {!mini && (aside || line) && (
                 <div
                   key={aside ? `a-${aside}` : (node ?? "")}
-                  className="relative rounded-[1.25rem] bg-ink p-3 text-paper md:p-4 shadow-[0_22px_44px_-18px_rgba(0,0,0,0.6)] ring-1 ring-paper/10 motion-safe:animate-[kern-pop_0.34s_cubic-bezier(.2,1.4,.4,1)]"
+                  className={`relative rounded-[1.25rem] bg-ink p-3 text-paper md:p-4 ${compact ? "pt-11" : ""} shadow-[0_22px_44px_-18px_rgba(0,0,0,0.6)] ring-1 ring-paper/10 motion-safe:animate-[kern-pop_0.34s_cubic-bezier(.2,1.4,.4,1)]`}
                 >
+                  {compact && (
+                    <button
+                      type="button"
+                      aria-label="Close the chat"
+                      onClick={() => setOpen(false)}
+                      className="absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center rounded-full bg-paper/15 text-[1rem] font-semibold leading-none text-paper"
+                    >
+                      ×
+                    </button>
+                  )}
                   {aside ? (
                     <p className="text-[0.9375rem] font-medium leading-snug tracking-tight">{aside}</p>
                   ) : node === "work" ? (
@@ -1222,7 +1524,7 @@ export default function HeroV7() {
               }}
             >
               <div ref={bodyRef} className="h-full w-full origin-bottom will-change-transform">
-                <KernArt face={face} lookRef={lookRef} />
+                <KernFace setterRef={faceSet} lookRef={lookRef} />
               </div>
               <span
                 ref={tagRef}
@@ -1232,7 +1534,7 @@ export default function HeroV7() {
           </div>
 
           {/* Who, availability and the ways forward: one calm row on desktop, stacked on a phone */}
-          <div className="flex flex-col gap-3 border-t border-paper/20 pt-3 md:flex-row md:items-center md:justify-between md:gap-8 md:pt-5">
+          <div className="v7-up flex flex-col gap-3 border-t border-paper/20 pt-3 md:flex-row md:items-center md:justify-between md:gap-8 md:pt-5">
             <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:gap-6">
               <p className="max-w-[24rem] text-balance text-[1rem] font-medium leading-snug tracking-tight text-paper md:text-[1.1875rem]">
                 <em className="font-display text-[1.15em] font-normal italic text-butter">Designer</em> for UI/UX, brand identity and motion, who ships the code too.
@@ -1283,7 +1585,14 @@ export default function HeroV7() {
       </div>
       <style>{`
         .v7-name{font-size:min(23vw,8rem)}
-        @media (min-width:768px){.v7-name{font-size:min(calc((100vw - 3rem) / 5.9),calc(100svh - 23rem))}}
+        @media (min-width:768px){.v7-name{font-size:max(4.5rem,min(calc((100vw - 3rem) / 5.9),calc(100svh - 23rem)))}}
+        /* The way in, as the intro panels lift: the letters rise one after another, then the row below follows.
+           Transform and opacity only, so it plays smoothly even while the page is still busy starting up. */
+        .v7-in{transition:transform 1s cubic-bezier(.16,1,.3,1) var(--d,0s),opacity .5s ease var(--d,0s)}
+        [data-entered="false"] .v7-in{opacity:0;transform:translate3d(0,.55em,0) rotate(6deg)}
+        .v7-up{transition:transform 1s cubic-bezier(.16,1,.3,1) .55s,opacity .7s ease .55s}
+        [data-entered="false"] .v7-up{opacity:0;transform:translate3d(0,1.5rem,0)}
+        @media (prefers-reduced-motion:reduce){.v7-in,.v7-up{transition:none}[data-entered="false"] .v7-in,[data-entered="false"] .v7-up{opacity:1;transform:none}}
         @keyframes kern-pop{from{opacity:0;transform:translateY(8px) scale(.92)}to{opacity:1;transform:none}}
       `}</style>
     </div>

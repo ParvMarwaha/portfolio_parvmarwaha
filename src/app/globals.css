@@ -35,6 +35,11 @@
     }
   }
 
+  /* No double-tap zoom: two quick taps on Kern or a chip zoomed the whole page on iPhones. Pinch zoom still works. */
+  html {
+    touch-action: manipulation;
+  }
+
   body {
     background-color: var(--paper);
     color: var(--ink);
@@ -70,7 +75,8 @@
     overscroll-behavior: contain;
   }
 
-  .lenis.lenis-stopped {
+  .lenis.lenis-stopped,
+  html.scroll-locked {
     overflow: hidden;
   }
 

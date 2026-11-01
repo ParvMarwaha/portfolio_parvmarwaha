@@ -37,7 +37,8 @@ export function ReadingProgress() {
 export function HeroImage({ src, alt }: { src: string; alt: string }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // Phones show the cover at its own shape in the page flow, so there is nothing to drift.
+    if (window.matchMedia("(prefers-reduced-motion: reduce), (max-width: 767.98px)").matches) return;
     let raf = 0;
     const update = () => {
       raf = 0;
@@ -55,8 +56,8 @@ export function HeroImage({ src, alt }: { src: string; alt: string }) {
     };
   }, []);
   return (
-    <div ref={ref} className="h-full w-full will-change-transform">
-      <RemoteImage src={src} alt={alt} className="h-full w-full object-cover" />
+    <div ref={ref} className="w-full md:h-full md:will-change-transform">
+      <RemoteImage src={src} alt={alt} className="h-auto w-full md:h-full md:object-cover" />
     </div>
   );
 }

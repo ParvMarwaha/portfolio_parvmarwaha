@@ -61,6 +61,7 @@ export default function Preloader() {
 
     getLenis()?.stop();
     let phrase = "";
+    let tagStep = -1;
 
     // Everything on screen is a function of one number, 0 to 1.
     const render = (v: number) => {
@@ -76,7 +77,12 @@ export default function Preloader() {
       const name = nameRef.current;
       if (name) {
         if (boxRef.current) boxRef.current.style.width = `calc(${v} * (100% + 1.75rem))`;
-        if (tagRef.current) tagRef.current.textContent = `${site.name} · ${name.offsetWidth} × ${name.offsetHeight}`;
+        // Reading the size forces a layout, so the tag ticks in steps rather than every frame.
+        const step = Math.round(v * 24);
+        if (tagRef.current && step !== tagStep) {
+          tagStep = step;
+          tagRef.current.textContent = `${site.name} · ${name.offsetWidth} × ${name.offsetHeight}`;
+        }
       }
       const next = [...PHRASES].reverse().find(([from]) => v >= from)?.[1] ?? PHRASES[0][1];
       if (next !== phrase && phraseRef.current) {
@@ -86,31 +92,56 @@ export default function Preloader() {
     };
     render(0);
 
-    const strips = rootRef.current?.querySelectorAll("[data-strip]") ?? [];
+    const strips = Array.from(rootRef.current?.querySelectorAll<HTMLElement>("[data-strip]") ?? []);
     const progress = { v: 0 };
-    const tl = gsap.timeline({
-      onComplete: () => {
-        try {
-          sessionStorage.setItem("pm-intro", "1");
-        } catch {}
-        getLenis()?.start();
-        setGone(true);
-      },
-    });
+    const anims: Animation[] = [];
+    let finishTimer = 0;
+    const done = () => {
+      try {
+        sessionStorage.setItem("pm-intro", "1");
+      } catch {}
+      getLenis()?.start();
+      setGone(true);
+    };
+    // The lift-off runs as Web Animations (transform and opacity only), which the browser plays off the main thread.
+    // With a script-driven tween, the cover starting up underneath (Kern dropping in, the page rendering) stole frames
+    // from the panels and the reveal stuttered on phones.
+    const lift = () => {
+      const content = contentRef.current;
+      if (content)
+        anims.push(
+          content.animate([{ transform: "none", opacity: 1 }, { transform: "translateY(-6%)", opacity: 0 }], {
+            duration: 600,
+            easing: "cubic-bezier(.55,.085,.68,.53)",
+            fill: "forwards",
+          })
+        );
+      // The cover wakes up once the panels are well on their way, not on the same frame they start moving.
+      finishTimer = window.setTimeout(finish, 450);
+      const mid = (strips.length - 1) / 2;
+      strips.forEach((el, i) =>
+        anims.push(
+          el.animate([{ transform: "scaleY(1)" }, { transform: "scaleY(0)" }], {
+            duration: 1000,
+            delay: 100 + Math.abs(i - mid) * 75,
+            easing: "cubic-bezier(.87,0,.13,1)",
+            fill: "forwards",
+          })
+        )
+      );
+      Promise.all(anims.map((a) => a.finished)).then(done, () => {});
+    };
 
+    const tl = gsap.timeline();
     tl.to(progress, { v: 1, duration: 2.3, ease: "power2.inOut", onUpdate: () => render(progress.v) })
       .add(() => render(1))
       .to({}, { duration: 0.4 })
-      .to(contentRef.current, { yPercent: -6, opacity: 0, duration: 0.6, ease: "power2.in" })
-      .add(finish, "<0.3")
-      .to(
-        strips,
-        { scaleY: 0, transformOrigin: "50% 0%", duration: 1, ease: "expo.inOut", stagger: { each: 0.075, from: "center" } },
-        "<0.1"
-      );
+      .add(lift);
 
     return () => {
       tl.kill();
+      anims.forEach((a) => a.cancel());
+      window.clearTimeout(finishTimer);
       getLenis()?.start();
     };
   }, []);
@@ -121,13 +152,13 @@ export default function Preloader() {
     <div ref={rootRef} className="preloader fixed inset-0 z-[9998] text-paper" aria-hidden>
       <div className="absolute inset-0 flex">
         {Array.from({ length: STRIPS }, (_, i) => (
-          <div key={i} data-strip className="h-full flex-1 bg-cobalt" style={{ boxShadow: i ? "-1px 0 0 0 rgba(255,255,255,0.05)" : undefined }} />
+          <div key={i} data-strip className="h-full flex-1 origin-top bg-cobalt will-change-transform" style={{ boxShadow: i ? "-1px 0 0 0 rgba(255,255,255,0.05)" : undefined }} />
         ))}
       </div>
 
       <div
         ref={contentRef}
-        className="absolute inset-0 flex flex-col justify-between p-6 md:p-10"
+        className="absolute inset-0 flex flex-col justify-between p-6 will-change-[transform,opacity] md:p-10"
         style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.16) 1px, transparent 1.4px)", backgroundSize: "24px 24px" }}
       >
         <div className="label flex justify-between">

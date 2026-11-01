@@ -40,15 +40,17 @@ export default async function CaseStudy({ params }: { params: Promise<{ slug: st
       <ReadingProgress />
       <main>
         {/* Full-bleed cover, the same image the canvas frame opens into, so the transition lands seamlessly. */}
-        <section className="relative h-[100svh] w-full overflow-hidden bg-deep">
+        {/* On a phone the cover is shown whole at its own shape with the title under it: cropped to a tall screen,
+            a wide cover was cut down to a sliver. */}
+        <section className="relative w-full overflow-hidden bg-deep pt-32 md:h-[100svh] md:pt-0">
           <HeroImage src={project.image} alt={`${displayTitle(project)} cover`} />
-          <div className="absolute inset-0 bg-gradient-to-t from-deep/75 via-deep/10 to-transparent" />
+          <div className="absolute inset-0 hidden bg-gradient-to-t from-deep/75 via-deep/10 to-transparent md:block" />
           <ProjectPager prev={neighbour(prev)} next={neighbour(next)} />
-          <div className="absolute inset-x-0 bottom-0 mx-auto box-content flex max-w-[100vw] flex-col gap-3 px-4 pb-8 text-white md:px-6 md:pb-12">
+          <div className="mx-auto box-content flex max-w-[100vw] flex-col gap-3 px-4 pb-10 pt-8 text-white md:absolute md:inset-x-0 md:bottom-0 md:px-6 md:pb-12 md:pt-0">
             <p className="label opacity-80">
               {numberOf(project)} · {project.type} · {project.published}
             </p>
-            <h1 className="text-6xl font-medium leading-[0.9] tracking-tighter md:text-[9rem]">
+            <h1 className="text-[3.25rem] font-medium leading-[0.9] tracking-tighter sm:text-6xl md:text-8xl lg:text-[9rem]">
               {project.title}
               {project.kind && <span className="ml-3 font-display italic text-butter md:ml-5">{`// ${project.kind}`}</span>}
             </h1>
@@ -75,16 +77,31 @@ export default async function CaseStudy({ params }: { params: Promise<{ slug: st
                 <VideoEmbed id={project.vimeo} poster={project.image} title={`${displayTitle(project)} video`} fallbackHref={`https://vimeo.com/${project.vimeo}`} />
               )}
               {project.prototype && (
-                <div className="h-[80svh] w-full overflow-hidden bg-paper-2">
-                  <iframe src={project.prototype} title={`${displayTitle(project)} prototype`} allowFullScreen loading="lazy" className="h-full w-full border-0" />
-                </div>
+                <>
+                  <div className="hidden h-[80svh] w-full overflow-hidden bg-paper-2 md:block">
+                    <iframe src={project.prototype} title={`${displayTitle(project)} prototype`} allowFullScreen loading="lazy" className="h-full w-full border-0" />
+                  </div>
+                  {/* On a phone an embedded prototype catches every swipe and the page stops scrolling, so it opens on its own. */}
+                  <a
+                    href={project.prototype.replace("embed.figma.com", "www.figma.com")}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between gap-4 rounded-[1rem] bg-paper-2 p-5 ring-1 ring-ink/10 md:hidden"
+                  >
+                    <span>
+                      <span className="label block text-mute">Figma prototype</span>
+                      <span className="mt-1 block text-lg font-medium tracking-tight">Try the clickable prototype</span>
+                    </span>
+                    <span className="shrink-0 rounded-full bg-ink px-4 py-2.5 text-[0.875rem] font-medium text-paper">Open ↗</span>
+                  </a>
+                </>
               )}
             </div>
           )}
 
           {project.gallery.length > 0 && (
             <div className="mt-14 md:mt-20">
-              <p className="label mb-5 text-mute">The work · click an image to zoom, arrows to browse</p>
+              <p className="label mb-5 text-mute">The work · <span className="pointer-coarse:hidden">click an image to zoom, arrows to browse</span><span className="hidden pointer-coarse:inline">tap an image to zoom, swipe to browse</span></p>
               <Gallery images={project.gallery} label={displayTitle(project)} />
             </div>
           )}
@@ -113,7 +130,7 @@ export default async function CaseStudy({ params }: { params: Promise<{ slug: st
           <span className="absolute inset-0 bg-deep/60 opacity-0 transition-opacity duration-700 group-hover:opacity-100" aria-hidden />
           <div className="relative mx-auto box-content max-w-[100vw] px-4 transition-colors duration-500 group-hover:text-white md:px-6">
             <p className="label mb-4 text-mute transition-colors duration-500 group-hover:text-white/80">Next · {numberOf(next)}</p>
-            <p className="text-5xl font-medium tracking-tighter transition-transform duration-500 group-hover:translate-x-3 md:text-9xl">
+            <p className="text-5xl font-medium tracking-tighter transition-transform duration-500 group-hover:translate-x-3 md:text-8xl lg:text-9xl">
               {displayTitle(next)} <span aria-hidden className="text-vermilion">→</span>
             </p>
           </div>

@@ -294,9 +294,19 @@ export default function BreakGame() {
           )}
 
           {paused && !over && (
-            <div className="absolute inset-0 flex items-center justify-center bg-deep/70">
-              <p className="label text-on-deep">Paused · press P</p>
-            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (gameRef.current) gameRef.current.paused = false;
+                setPaused(false);
+              }}
+              className="absolute inset-0 flex items-center justify-center bg-deep/70"
+            >
+              <span className="label text-on-deep">
+                Paused · <span className="pointer-coarse:hidden">press P</span>
+                <span className="hidden pointer-coarse:inline">tap to play</span>
+              </span>
+            </button>
           )}
 
           {over && (
