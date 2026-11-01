@@ -33,16 +33,14 @@ export default function TopBar() {
   return (
     <>
       <SoundBrain />
-      <header className="pointer-events-none fixed inset-x-0 top-0 z-[60] flex items-start justify-between p-3 md:p-5">
-        <Link
-          href="/"
-          className={`pointer-events-auto px-4 py-2 text-[0.9375rem] font-semibold tracking-tighter ${pill}`}
-          data-cursor-label="Home"
-        >
+      {/* The bar sits on the same full-width column as the page content, so its edges line up with everything below it. */}
+      <header className="pointer-events-none fixed inset-x-0 top-0 z-[60] px-4 pt-3 md:px-6 md:pt-5">
+        <div className="relative mx-auto flex w-full max-w-[100vw] items-start justify-between">
+        <Link href="/" className={`pointer-events-auto px-4 py-2 text-[0.9375rem] font-semibold tracking-tighter ${pill}`} data-cursor-label="Home">
           {site.name}.
         </Link>
 
-        <div className="pointer-events-auto absolute left-1/2 top-3 hidden -translate-x-1/2 md:top-5 lg:block">
+        <div className="pointer-events-auto absolute left-1/2 top-0 hidden -translate-x-1/2 lg:block">
           <NavLinks pathname={pathname} />
         </div>
 
@@ -76,6 +74,7 @@ export default function TopBar() {
           >
             {open ? "Close" : "Menu"}
           </button>
+        </div>
         </div>
       </header>
 

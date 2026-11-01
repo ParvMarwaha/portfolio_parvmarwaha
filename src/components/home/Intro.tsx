@@ -1,86 +1,82 @@
 "use client";
 
-import { DISCIPLINES, type ProjectType } from "@/content/projects";
+import { projects, type ProjectType } from "@/content/projects";
 import { site } from "@/content/site";
 import { getLenis, rem } from "@/utils/lenis";
 import Reveal from "@/components/ui/Reveal";
 
-const NAMES: Record<ProjectType, string> = {
-  Others: "Other work",
-  "UI/UX": "UI/UX design",
-  Branding: "Brand identity",
-  Motion: "Motion graphics",
-  Illustration: "Illustration",
-};
-
-/** Who I am in one sentence, then what a recruiter wants in five seconds: what I do, with what, where, and how to reach me. */
-export default function Intro() {
-  const [before, emphasis, after] = site.intro;
-
-  // Picking a discipline filters the grid below and takes you there.
-  const show = (type: ProjectType) => {
+/**
+ * Who I am, as one text layer on the canvas. The kinds of work in it are selectable layers: hover one and it gets a
+ * selection box with a count, click it and the frames below are filtered to that kind.
+ */
+function Layer({ type, children }: { type: ProjectType; children: React.ReactNode }) {
+  const n = projects.filter((p) => p.type === type).length;
+  const show = () => {
     window.dispatchEvent(new CustomEvent<ProjectType>("pm:filter", { detail: type }));
     const el = document.getElementById("work");
     if (!el) return;
     const lenis = getLenis();
-    if (lenis) lenis.scrollTo(el, { offset: -rem(84), duration: 1.4 });
+    if (lenis) lenis.scrollTo(el, { offset: -rem(96), duration: 1.4 });
     else el.scrollIntoView({ behavior: "smooth" });
   };
-
-  const col = "border-t border-ink/15 pt-4";
-  const big = "text-xl font-medium leading-snug tracking-tight md:text-2xl";
   return (
-    <section className="px-4 pt-16 md:px-6 md:pt-28" aria-label="Introduction">
-      <div className="mx-auto max-w-[max(85rem,1360px)]">
-        <p className="label mb-6 text-mute">Hello</p>
-        <Reveal>
-          <p className="max-w-5xl text-3xl font-medium leading-[1.12] tracking-tighter md:text-[3.5rem]">
-            {before}
-            <em className="font-display italic text-cobalt">{emphasis}</em>
-            {after}
+    <button
+      type="button"
+      onClick={show}
+      className="group/layer relative inline-block text-cobalt outline-none"
+      aria-label={`Show ${type} projects`}
+      data-cursor-label={`${n} ${n === 1 ? "frame" : "frames"} ↓`}
+    >
+      {children}
+      <span className="pointer-events-none absolute -inset-x-[0.08em] -inset-y-[0.02em] opacity-0 transition-opacity duration-200 group-hover/layer:opacity-100 group-focus-visible/layer:opacity-100" aria-hidden>
+        <span className="absolute inset-0 border-[1.5px] border-cobalt" />
+        {["-left-[3px] -top-[3px]", "-right-[3px] -top-[3px]", "-left-[3px] -bottom-[3px]", "-right-[3px] -bottom-[3px]"].map((c) => (
+          <span key={c} className={`absolute h-[7px] w-[7px] border-[1.5px] border-cobalt bg-paper ${c}`} />
+        ))}
+      </span>
+    </button>
+  );
+}
+
+export default function Intro() {
+  const facts: [string, React.ReactNode][] = [
+    ["Works in", site.tools.join(", ")],
+    ["Based in", "India"],
+    ["Status", site.availability],
+    [
+      "Say hi",
+      <a key="e" href={`mailto:${site.email}`} className="break-all underline decoration-ink/30 underline-offset-4 transition-colors hover:decoration-vermilion" data-cursor-label="Email">
+        {site.email}
+      </a>,
+    ],
+  ];
+  return (
+    <section className="px-4 pb-16 pt-20 md:px-6 md:pb-24 md:pt-28" aria-label="Introduction">
+      <div className="grid gap-y-12 lg:grid-cols-12 lg:items-end lg:gap-x-10">
+        <Reveal className="lg:col-span-8">
+          <p className="text-balance text-[clamp(2.125rem,4.4vw,4.5rem)] font-medium leading-[1.06] tracking-[-0.035em] text-ink">
+            {/* The same words as site.intro, with the kinds of work as selectable layers */}
+            I&apos;m Parv, a <em className="font-display font-normal italic">designer</em> from India. I design{" "}
+            <span className="whitespace-nowrap">
+              <Layer type="UI/UX">interfaces</Layer>,
+            </span>{" "}
+            <Layer type="Branding">brands</Layer> and{" "}
+            <span className="whitespace-nowrap">
+              <Layer type="Motion">motion</Layer>,
+            </span>{" "}
+            and I can build and ship them too.
           </p>
         </Reveal>
 
-        <div className="mt-14 grid gap-x-8 gap-y-10 md:mt-20 md:grid-cols-4">
-          <div className={col}>
-            <p className="label mb-4 text-mute">What I do</p>
-            <ul className={big}>
-              {DISCIPLINES.map((t) => (
-                <li key={t}>
-                  <button
-                    type="button"
-                    onClick={() => show(t)}
-                    className="text-left transition-colors hover:text-cobalt"
-                    aria-label={`Show ${NAMES[t]} projects`}
-                    data-cursor-label="Show"
-                  >
-                    {NAMES[t]}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className={col}>
-            <p className="label mb-4 text-mute">Tools</p>
-            <p className={big}>{site.tools.join(", ")}</p>
-            <p className="mt-3 text-[0.9375rem] leading-snug text-mute">{site.aiNote.short}</p>
-          </div>
-          <div className={col}>
-            <p className="label mb-4 text-mute">Based in</p>
-            <p className={big}>India</p>
-            <p className="mt-1 text-[0.9375rem] text-mute">{site.availability}</p>
-          </div>
-          <div className={col}>
-            <p className="label mb-4 text-mute">Say hi</p>
-            <a
-              href={`mailto:${site.email}`}
-              className={`block break-all underline decoration-ink/30 underline-offset-4 transition-colors hover:decoration-vermilion ${big}`}
-              data-cursor-label="Email"
-            >
-              {site.email}
-            </a>
-          </div>
-        </div>
+        {/* The facts, as a small properties list beside the statement */}
+        <dl className="grid grid-cols-1 gap-y-4 border-t border-ink/15 pt-5 sm:grid-cols-2 sm:gap-x-8 lg:col-span-4 lg:grid-cols-1 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+          {facts.map(([k, v]) => (
+            <div key={k} className="grid grid-cols-[6rem_1fr] items-baseline gap-3">
+              <dt className="text-[0.8125rem] tracking-tight text-mute">{k}</dt>
+              <dd className="text-[0.9375rem] font-medium leading-snug tracking-tight text-ink">{v}</dd>
+            </div>
+          ))}
+        </dl>
       </div>
     </section>
   );

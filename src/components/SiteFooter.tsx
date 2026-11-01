@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { site } from "@/content/site";
 import LetterHeadline from "@/components/hero/LetterHeadline";
+import KernCameo from "@/components/kern/KernCameo";
 
 /**
  * The one footer, the full width of the site. A cobalt band that rises under the page like the cover sheet does,
  * so the page ends where it began: how to hire me, then my name in the same weight-reacting type, then the way
- * around the site. Its content sits on the same 85rem (1360px at the base size) column as every page.
+ * around the site. Its content sits on the same full-width column (with side gutters) as every page.
  * `cta={false}` drops the hiring row (the contact page already is one).
  */
 export default function SiteFooter({ cta = true }: { cta?: boolean }) {
@@ -14,7 +15,7 @@ export default function SiteFooter({ cta = true }: { cta?: boolean }) {
   return (
     <footer className="mt-12 md:mt-20" aria-label="Contact and site links">
       <div className="rounded-t-[1.5rem] bg-cobalt text-paper md:rounded-t-[2rem]">
-        <div className="mx-auto box-content max-w-[max(85rem,1360px)] px-4 pb-10 pt-14 [--gutter:2rem] md:px-6 md:pb-12 md:pt-24 md:[--gutter:3rem]">
+        <div className="mx-auto box-content max-w-[100vw] px-4 pb-10 pt-14 [--gutter:2rem] md:px-6 md:pb-12 md:pt-24 md:[--gutter:3rem]">
         {cta && (
           <div className="mb-14 flex flex-col gap-8 md:mb-20 md:flex-row md:items-end md:justify-between">
             <h2 className="max-w-xl text-5xl font-medium leading-[0.95] tracking-tighter md:text-[4.5rem]">
@@ -53,13 +54,11 @@ export default function SiteFooter({ cta = true }: { cta?: boolean }) {
           </div>
         )}
 
-        <LetterHeadline
-          lines={["Parv Marwaha"]}
-          label={site.name}
-          decorative
-          className="mb-8 md:mb-12"
-          fontSize="min(18.75rem, calc(min(max(85rem, 1360px), 100vw - var(--gutter)) / 6.6))"
-        />
+        {/* The big name, with Kern from the cover sitting on its first letter */}
+        <div className="relative mb-8 w-fit md:mb-12" style={{ fontSize: "min(18.75rem, calc(min(100vw, 100vw - var(--gutter)) / 6.6))" }}>
+          <LetterHeadline lines={["Parv Marwaha"]} label={site.name} decorative fontSize="1em" />
+          <KernCameo className="h-[0.36em] w-[0.36em]" style={{ left: "0.1em", top: "0.165em", transform: "translateY(-100%)" }} />
+        </div>
 
         <div className="label flex flex-col gap-4 text-paper/70 md:flex-row md:items-center md:justify-between">
           <span>2026 © {site.name}</span>

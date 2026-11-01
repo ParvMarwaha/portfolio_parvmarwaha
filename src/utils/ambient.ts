@@ -301,6 +301,16 @@ export function gameSound(kind: GameSound, pan = 0, n = 0) {
   }
 }
 
+/**
+ * Building blocks for sounds that belong to one component (a machine on the home page, say). They all play on the
+ * effects bus and do nothing until the audio is running, so call them freely.
+ *  - ready(): true when sound is on and unlocked.
+ *  - blip(type, fromHz, toHz, seconds, level, delay, pan, lowpassHz): a pitched note that can slide.
+ *  - burst(filter, hz, seconds, level, delay, pan, sweepToHz): filtered noise (click, crack, whoosh, boom, crackle).
+ *  - tone(step, octave): a frequency on the music's scale (step 0 is the key note), for notes that sit with the music.
+ */
+export const sfx = { ready, blip, burst, tone };
+
 /** Turn the music down while the game is on so the effects carry (1 = the normal level). */
 export function duckMusic(amount: number) {
   if (!ctx || !musicOut) return;

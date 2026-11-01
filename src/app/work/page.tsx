@@ -8,7 +8,7 @@ export default function WorkPage() {
   return (
     <>
       <main className="min-h-screen px-4 pb-20 pt-28 md:px-6 md:pb-28 md:pt-36">
-        <div className="mx-auto max-w-[max(85rem,1360px)]">
+        <div className="mx-auto max-w-[100vw]">
         <WorkIndex />
         </div>
       </main>

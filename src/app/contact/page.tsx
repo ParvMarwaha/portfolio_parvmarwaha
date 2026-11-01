@@ -13,7 +13,7 @@ export default function Contact() {
   return (
     <>
       <main className="px-4 pb-16 pt-28 md:px-6 md:pb-24 md:pt-36">
-        <div className="mx-auto max-w-[max(85rem,1360px)]">
+        <div className="mx-auto max-w-[100vw]">
         <p className="label mb-5 text-mute">Contact</p>
         <h1 className="text-6xl font-medium leading-[0.9] tracking-tighter md:text-[9rem]">
           Con<em className="font-display italic text-cobalt">tact</em>
@@ -34,6 +34,25 @@ export default function Contact() {
               </span>
               {site.availability}
             </p>
+            <div className="mt-8 flex flex-wrap items-center gap-2.5">
+              <a
+                href={site.resume.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex w-fit items-center gap-2 rounded-full bg-vermilion px-6 py-3 text-[0.9375rem] font-semibold tracking-normal text-white transition-transform hover:scale-[1.04]"
+                data-cursor-label="View"
+              >
+                View resume <span aria-hidden>↗</span>
+              </a>
+              <a
+                href={site.resume.href}
+                download={site.resume.file}
+                className="inline-flex w-fit items-center gap-2 rounded-full px-6 py-3 text-[0.9375rem] font-medium tracking-normal ring-1 ring-ink/25 transition-colors hover:bg-ink hover:text-paper"
+                data-cursor-label="Download"
+              >
+                Download <span aria-hidden>↓</span>
+              </a>
+            </div>
           </div>
 
           <ul className="md:col-span-5">

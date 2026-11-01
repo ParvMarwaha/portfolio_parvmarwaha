@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { Ph } from "@/components/ui/Placeholder";
+import Pictures from "@/components/about/Pictures";
 import SiteFooter from "@/components/SiteFooter";
 import Reveal from "@/components/ui/Reveal";
 import { site } from "@/content/site";
@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "About" };
 
 const DISCIPLINE_NAMES = { "UI/UX": "UI/UX design", Branding: "Brand identity", Motion: "Motion graphics", Illustration: "Illustration" } as const;
 
-// The text lives in src/content/site.ts (marked DRAFT). The portrait is a real photo; the three pictures further down are placeholders until the rest arrive.
+// The text lives in src/content/site.ts (marked DRAFT). The portrait is a real photo; the three pictures further down are drawn in code (src/components/about/Pictures.tsx) until real photos arrive.
 export default function About() {
   const facts: [string, React.ReactNode][] = [
     ["Based in", "India"],
@@ -23,7 +23,7 @@ export default function About() {
   return (
     <>
       <main className="px-4 pb-20 pt-28 md:px-6 md:pb-28 md:pt-36">
-        <div className="mx-auto max-w-[max(85rem,1360px)]">
+        <div className="mx-auto max-w-[100vw]">
         <p className="label mb-5 text-mute">About</p>
         <h1 className="text-6xl font-medium leading-[0.9] tracking-tighter md:text-[9rem]">
           Ab<em className="font-display italic text-cobalt">out</em>
@@ -100,12 +100,8 @@ export default function About() {
         </section>
 
         <section className="mt-20 md:mt-32" aria-label="In pictures">
-          <p className="label mb-6 text-mute">In pictures · coming soon</p>
-          <div className="grid gap-4 md:grid-cols-3 md:gap-6">
-            <Ph label="Workspace" ratio="4 / 5" />
-            <Ph label="Sketchbook" ratio="4 / 5" className="md:mt-12" />
-            <Ph label="Moodboard" ratio="4 / 5" />
-          </div>
+          <p className="label mb-6 text-mute">In pictures · drawn for now</p>
+          <Pictures />
         </section>
 
         <div className="mt-20 flex flex-wrap items-center gap-3 md:mt-28">

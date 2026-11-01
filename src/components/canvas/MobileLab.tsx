@@ -85,9 +85,15 @@ export default function MobileLab() {
                 </h2>
                 <span className="label text-mute">{e.kind}</span>
               </div>
-              <div className="relative aspect-[5/4] overflow-hidden bg-paper shadow-[0_1px_0_rgba(14,15,26,0.05),0_24px_48px_-24px_rgba(14,15,26,0.45)]">
-                {EXPERIMENT_VIEWS[e.id]}
-              </div>
+              {e.href ? (
+                <Link href={e.href} className="relative block aspect-[5/4] overflow-hidden bg-paper shadow-[0_1px_0_rgba(14,15,26,0.05),0_24px_48px_-24px_rgba(14,15,26,0.45)]">
+                  {EXPERIMENT_VIEWS[e.id]}
+                </Link>
+              ) : (
+                <div className="relative aspect-[5/4] overflow-hidden bg-paper shadow-[0_1px_0_rgba(14,15,26,0.05),0_24px_48px_-24px_rgba(14,15,26,0.45)]">
+                  {EXPERIMENT_VIEWS[e.id]}
+                </div>
+              )}
               <p className="mt-3 text-[0.9375rem] leading-snug text-mute">{forTouch(e.note)}</p>
             </article>
           ))}

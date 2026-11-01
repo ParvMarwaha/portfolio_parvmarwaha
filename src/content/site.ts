@@ -8,6 +8,7 @@ export const site = {
   email: "parvmarwaha1@gmail.com",
   phone: "+91 9625432705",
   phoneHref: "tel:9625432705",
+  resume: { href: "/parv-marwaha-resume.pdf", file: "Parv-Marwaha-Resume.pdf" },
   socials: [
     { label: "Instagram", href: "https://www.instagram.com/_parv.19/" },
     { label: "LinkedIn", href: "https://www.linkedin.com/in/parv-marwaha-aa0361232/" },
