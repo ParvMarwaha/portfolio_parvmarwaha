@@ -19,7 +19,8 @@ function Frame({ project, onOpen }: { project: Project; onOpen: (href: string, e
   const rootRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
-  // Wipe the picture in the first time the frame scrolls into view.
+  // Wipe the picture in the first time the frame scrolls into view (on a phone it fades up instead: a clip-path wipe
+  // repaints the whole picture every frame, which stutters while scrolling).
   useEffect(() => {
     const el = rootRef.current;
     if (!el) return;
@@ -64,7 +65,7 @@ function Frame({ project, onOpen }: { project: Project; onOpen: (href: string, e
           data-card-image
           onPointerMove={parallax}
           onPointerLeave={settle}
-          className="relative aspect-video overflow-hidden bg-paper shadow-[0_1px_2px_rgba(14,15,26,0.08),0_18px_40px_-26px_rgba(14,15,26,0.45)] [clip-path:inset(0_0_100%_0)] [transition:clip-path_1100ms_cubic-bezier(0.2,0.9,0.2,1)] group-data-[shown=1]/card:[clip-path:inset(0)]"
+          className="relative aspect-video overflow-hidden bg-paper shadow-[0_1px_2px_rgba(14,15,26,0.08),0_18px_40px_-26px_rgba(14,15,26,0.45)] [clip-path:inset(0_0_100%_0)] [transition:clip-path_1100ms_cubic-bezier(0.2,0.9,0.2,1)] group-data-[shown=1]/card:[clip-path:inset(0)] pointer-coarse:translate-y-6 pointer-coarse:opacity-0 pointer-coarse:[clip-path:none] pointer-coarse:[transition:opacity_700ms_ease-out,translate_700ms_cubic-bezier(0.2,0.9,0.2,1)] pointer-coarse:group-data-[shown=1]/card:translate-y-0 pointer-coarse:group-data-[shown=1]/card:opacity-100"
         >
           <RemoteImage
             ref={imgRef}

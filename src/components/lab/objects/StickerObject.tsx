@@ -10,7 +10,7 @@ import { LID_CSS } from "./v3-styles";
 // The lid is as big as the box allows: landscape on wide screens, portrait below 1024px (see LID_CSS), with room for the tilt.
 const FIT_CSS = `
 .lab-lid { width: min(100cqw, calc(100cqh * 1.5625 * 0.86)); }
-@media (max-width: 1023.98px) { .lab-lid { width: min(100cqw, calc(100cqh / 1.3 * 0.86)); } }
+@media (max-width: 1023.98px) { .lab-lid { width: min(90cqw, calc(100cqh / 1.3 * 0.86)); } }
 `;
 
 /**

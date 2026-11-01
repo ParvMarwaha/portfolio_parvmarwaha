@@ -671,10 +671,19 @@ export default function HeroV7() {
     let last = performance.now();
     let lastTag = "";
     let lastBubble = "";
+    // The bubble's width, measured only when it changes: reading it every frame forced a layout per frame.
+    let bubW = 0;
+    const bubRo = new ResizeObserver(() => {
+      bubW = 0;
+    });
+    if (bubbleRef.current) bubRo.observe(bubbleRef.current);
+    // Phones: no live font-weight (re-laying out the giant name each frame is what made it stutter).
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
     const G = 2600;
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
-      if (!visible || document.hidden) {
+      // Paused when off screen, in a background tab, or covered by the page sliding up over the (sticky) cover.
+      if (!visible || document.hidden || window.scrollY > window.innerHeight) {
         last = now;
         return;
       }
@@ -884,7 +893,7 @@ export default function HeroV7() {
         }
         const bub = bubbleRef.current;
         if (bub) {
-          const bw = bub.offsetWidth;
+          const bw = bubW || (bubW = bub.offsetWidth);
           const bx = clamp(s.x, bw / 2 + 4, W - bw / 2 - 4);
           const by = s.y - K * sy - bob - 18;
           const pos = `${bx.toFixed(0)},${by.toFixed(0)},${bw}`;
@@ -912,7 +921,7 @@ export default function HeroV7() {
         const nw = cur + (w - cur) * Math.min(1, dt * 12);
         el.dataset.w = String(nw);
         const fw = String(Math.round(nw / 4) * 4);
-        if (el.style.fontWeight !== fw) el.style.fontWeight = fw;
+        if (!coarse && el.style.fontWeight !== fw) el.style.fontWeight = fw;
         const tr = Math.abs(ox[i]) > 0.2 ? `translateX(${ox[i].toFixed(1)}px)` : "";
         if (el.style.transform !== tr) el.style.transform = tr;
       });
@@ -921,6 +930,7 @@ export default function HeroV7() {
 
     return () => {
       cancelAnimationFrame(raf);
+      bubRo.disconnect();
       timers.forEach((t) => window.clearTimeout(t));
       window.clearTimeout(asideTimer);
       window.clearTimeout(faceTimer);
@@ -1261,7 +1271,7 @@ export default function HeroV7() {
         </section>
       </div>
       <style>{`
-        .v7-name{font-size:min(20vw,8rem)}
+        .v7-name{font-size:min(23vw,8rem)}
         @media (min-width:768px){.v7-name{font-size:min(calc((100vw - 3rem) / 5.9),calc(100svh - 23rem))}}
         @keyframes kern-pop{from{opacity:0;transform:translateY(8px) scale(.92)}to{opacity:1;transform:none}}
       `}</style>

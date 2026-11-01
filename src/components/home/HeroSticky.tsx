@@ -21,6 +21,9 @@ export default function HeroSticky({ children }: { children: React.ReactNode }) 
       el.style.transform = `scale(${1 - p * 0.07}) translate3d(0, ${p * 24}px, 0)`;
       // A black sheet fading in dims it the same way a brightness filter would, without re-painting the card.
       if (shadeRef.current) shadeRef.current.style.opacity = String(p * 0.35);
+      // Fully covered: stop painting it underneath the page.
+      const hide = window.scrollY > window.innerHeight ? "hidden" : "";
+      if (el.style.visibility !== hide) el.style.visibility = hide;
     };
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(update);

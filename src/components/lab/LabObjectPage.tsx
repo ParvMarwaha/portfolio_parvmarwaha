@@ -7,7 +7,7 @@ import type { Experiment } from "@/content/lab";
  */
 export default function LabObjectPage({ item, children }: { item: Experiment; children: React.ReactNode }) {
   return (
-    <main className="px-4 pt-[5.25rem] md:px-6 md:pt-[5.75rem]">
+    <main className="overflow-x-clip px-4 pt-[5.25rem] md:px-6 md:pt-[5.75rem]">
       <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
         <h1 className="text-[1.375rem] font-medium tracking-tighter text-ink md:text-[1.75rem]">
           <Link href="/lab" className="mr-3 text-mute transition-colors hover:text-ink" data-cursor-label="Lab">
