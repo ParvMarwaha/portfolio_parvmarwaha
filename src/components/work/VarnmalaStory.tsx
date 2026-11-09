@@ -125,7 +125,7 @@ export default function VarnmalaStory() {
   const details: [string, string][] = [
     ["My role", "Research, UX, UI design, motion"],
     ["Timeline", "Designed in 2025, built as an app in 2026"],
-    ["Tools", p.tools.join(", ")],
+    ["Tools", "Designed in Figma, built with Claude"],
     ["Platform", "Mobile app"],
   ];
 

@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { flushSync } from "react-dom";
 import { gsap } from "@/utils/gsap";
 import { getProject } from "@/content/projects";
-import { getLenis } from "@/utils/lenis";
+import { getLenis, rem } from "@/utils/lenis";
 
 const STRIPS = 6;
 
@@ -112,11 +112,24 @@ export default function PageTransition() {
       await Promise.race([there, wait(10000)]);
       await wait(180); // let the new page paint its first frame
       getLenis()?.resize();
-      if (!back) {
+      // A link to a section (the Work tab, /#work) opens the page at that section, not at the top.
+      const hash = back ? "" : decodeURIComponent(new URL(href, window.location.href).hash.slice(1));
+      const toSection = () => {
+        const el = hash ? document.getElementById(hash) : null;
+        if (!el) return false;
+        const y = Math.max(0, el.getBoundingClientRect().top + window.scrollY - rem(84));
+        getLenis()?.scrollTo(y, { immediate: true, force: true } as never);
+        window.scrollTo(0, y);
+        return true;
+      };
+      if (!back && !toSection()) {
         getLenis()?.scrollTo(0, { immediate: true } as never);
         window.scrollTo(0, 0);
       }
-      window.setTimeout(() => getLenis()?.resize(), 700);
+      window.setTimeout(() => {
+        getLenis()?.resize();
+        toSection(); // pictures above it may have loaded and moved it
+      }, 700);
 
       const lift = gsap.timeline();
       lift

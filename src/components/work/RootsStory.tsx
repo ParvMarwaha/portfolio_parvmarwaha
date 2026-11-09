@@ -123,6 +123,7 @@ export default function RootsStory() {
   const details: [string, string][] = [
     ["My role", "Research, brand identity, information architecture, UI design"],
     ["Timeline", "January to May 2026"],
+    ["Tools", "Figma, Illustrator, Photoshop"],
     ["Context", "Graduation project, B.Des Interaction Design, GGSIPU, made during my internship at Roots Foundation"],
     ["Guide", "Dr. Nanki Nath"],
   ];
