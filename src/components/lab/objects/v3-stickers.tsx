@@ -3,7 +3,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { site } from "@/content/site";
-import { displayTitle, projectHref, projects, projectsOpenOnBehance } from "@/content/projects";
+import { displayTitle, projectHref, projects, linkTarget } from "@/content/projects";
 import Magnetic from "@/components/ui/Magnetic";
 import RemoteImage from "@/components/ui/RemoteImage";
 import { toWork } from "@/components/home/hero/shared";
@@ -145,11 +145,10 @@ function AvailFace({ spec }: { spec: StickerSpec }) {
 
 function ProjectFace({ spec }: { spec: StickerSpec }) {
   const p = projects[spec.project ?? 0];
-  const external = projectsOpenOnBehance();
   return (
     <a
       href={projectHref(p)}
-      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+      {...linkTarget(p)}
       className="lid3-face"
       draggable={false}
       aria-label={`${displayTitle(p)}, ${p.type}, ${p.year}`}

@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { site } from "@/content/site";
-import { projects, projectHref, projectsOpenOnBehance } from "@/content/projects";
+import { projects, projectHref, linkTarget } from "@/content/projects";
 import { useIstClock } from "@/components/hero/LetterHeadline";
 import Magnetic from "@/components/ui/Magnetic";
 import RemoteImage from "@/components/ui/RemoteImage";
@@ -1302,7 +1302,6 @@ export default function HeroV7() {
   };
 
   const p = WORK[workIdx];
-  const ext = projectsOpenOnBehance() ? ({ target: "_blank", rel: "noopener noreferrer" } as const) : {};
   const line = node ? NODES[node] : null;
   const chip =
     "rounded-full px-2.5 py-1.5 text-[0.75rem] font-medium md:px-3 md:text-[0.8125rem] tracking-tight ring-1 ring-paper/30 transition-colors hover:bg-paper hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-butter";
@@ -1406,7 +1405,7 @@ export default function HeroV7() {
                     <p className="text-[0.9375rem] font-medium leading-snug tracking-tight">{aside}</p>
                   ) : node === "work" ? (
                     <div className="flex gap-3">
-                      <a href={projectHref(p)} {...ext} className="relative block aspect-[4/3] w-[8.5rem] shrink-0 overflow-hidden rounded-lg" style={{ background: p.accent }} data-cursor-label="Open">
+                      <a href={projectHref(p)} {...linkTarget(p)} className="relative block aspect-[4/3] w-[8.5rem] shrink-0 overflow-hidden rounded-lg" style={{ background: p.accent }} data-cursor-label="Open">
                         <RemoteImage key={p.slug} src={p.image} alt={p.title} className="absolute inset-0 h-full w-full object-cover" />
                       </a>
                       <div className="flex min-w-0 flex-col justify-between">
@@ -1426,7 +1425,7 @@ export default function HeroV7() {
                           <button type="button" className={chip} onClick={() => choose({ label: "", act: "next" })} aria-label="Next project">
                             →
                           </button>
-                          <a href={projectHref(p)} {...ext} className={chip}>
+                          <a href={projectHref(p)} {...linkTarget(p)} className={chip}>
                             Open ↗
                           </a>
                           <button type="button" className={chip} onClick={() => choose({ label: "", act: "all" })}>

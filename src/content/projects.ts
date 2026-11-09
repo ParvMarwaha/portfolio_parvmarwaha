@@ -33,8 +33,10 @@ export interface Project {
   prototype?: string;
   /** Not shown on the site for now; kept so the credit is not lost. */
   team?: Person[];
-  /** This project's own page on Behance. */
-  behance: string;
+  /** This project's own page on Behance. Work that is not on Behance opens its page on this site instead. */
+  behance?: string;
+  /** Other kinds it also counts as in the filters ("Branding" for a project that is mostly UI/UX). */
+  also?: ProjectType[];
 }
 
 // Behance serves each image at several sizes. 1400_webp is crisp enough and small; GIFs keep their own path.
@@ -44,6 +46,25 @@ const imgs = (files: string[]) => files.map((f) => (f.includes("|") ? img(f.spli
 
 // Order matters: it is the order on the canvas (slots: wide, square, wide, tall, wide, square, wide, wide).
 export const projects: Project[] = [
+  {
+    // Not on Behance: my graduation project, done during my internship at Roots. Its page here is its own story
+    // (src/components/work/RootsStory.tsx); the pictures are mine, exported from the thesis files into public/images/roots.
+    slug: "roots-foundation",
+    accent: "#09569A",
+    title: "Roots Foundation",
+    kind: "brand & website",
+    type: "UI/UX",
+    also: ["Branding"],
+    year: 2026,
+    published: "May 2026",
+    summary: "A new identity and website for an NGO that works with rigour, so that it finally looks the way it works.",
+    tools: ["Figma", "Illustrator", "Photoshop"],
+    fields: ["Brand Identity", "UX Research", "Web Design"],
+    image: "/images/roots/cover.webp",
+    gallery: [],
+    prototype:
+      "https://www.figma.com/proto/AowIKn6af3aqlmQ4St4tqr/GP-FINAL?node-id=1-11986&scaling=scale-down-width&content-scaling=fixed&page-id=1%3A4725&starting-point-node-id=1%3A11986",
+  },
   {
     slug: "sangeet-sathi",
     behance: "https://www.behance.net/gallery/220123713/Sangeet-Sathi",
@@ -210,8 +231,13 @@ export const projects: Project[] = [
  * project pictures are in, set this to "pages" and the site's own case studies (/work/[slug]) open again.
  */
 export const PROJECT_LINKS: "behance" | "pages" = "behance";
-export const projectsOpenOnBehance = () => PROJECT_LINKS === "behance";
-export const projectHref = (p: Project) => (PROJECT_LINKS === "behance" ? p.behance : `/work/${p.slug}`);
+/** Whether this project's link leaves the site (a Behance page in a new tab). */
+export const projectsOpenOnBehance = (p: Project) => PROJECT_LINKS === "behance" && !!p.behance;
+export const projectHref = (p: Project) => (projectsOpenOnBehance(p) && p.behance ? p.behance : `/work/${p.slug}`);
+/** New-tab attributes for a link that leaves the site; nothing for one that stays. */
+export const linkTarget = (p: Project) => (projectsOpenOnBehance(p) ? ({ target: "_blank", rel: "noopener noreferrer" } as const) : {});
+/** Whether a project shows up under a filter (its own kind, or one it also counts as). */
+export const isOfType = (p: Project, t: ProjectType) => p.type === t || !!p.also?.includes(t);
 
 export const TYPES: ProjectType[] = ["UI/UX", "Branding", "Motion", "Illustration", "Others"];
 export const DISCIPLINES: Discipline[] = ["UI/UX", "Branding", "Motion", "Illustration"];

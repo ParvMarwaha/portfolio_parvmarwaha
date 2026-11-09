@@ -128,6 +128,8 @@ export default function FaviconAnimator() {
       }
 
       const url = canvas.toDataURL("image/png");
+      if (url === lastUrl) return;
+      lastUrl = url;
       document.querySelectorAll<HTMLLinkElement>('link[rel~="icon"]').forEach((l) => {
         l.type = "image/png";
         l.removeAttribute("sizes");
@@ -135,9 +137,13 @@ export default function FaviconAnimator() {
       });
     };
 
+    let lastUrl = "";
     const start = performance.now();
     paint(0);
-    const id = reduced ? 0 : window.setInterval(() => paint((performance.now() - start) / 1000), 130);
+    // Phones never show a tab icon, and each frame is a PNG encode on the main thread (eight a second): there it
+    // stays one still face, so it never steals a frame from the page.
+    const still = reduced || window.matchMedia("(pointer: coarse)").matches;
+    const id = still ? 0 : window.setInterval(() => paint((performance.now() - start) / 1000), 130);
     return () => {
       window.clearInterval(id);
       window.removeEventListener("pm:theme", onTheme);

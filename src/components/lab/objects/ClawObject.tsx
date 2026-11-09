@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { displayTitle, projectHref, projects, projectsOpenOnBehance } from "@/content/projects";
+import { displayTitle, projectHref, projects, linkTarget } from "@/content/projects";
 import RemoteImage from "@/components/ui/RemoteImage";
 import { useEntered } from "@/components/home/hero/shared";
 import { ClawView, type ClawItem } from "./v2-view";
@@ -48,7 +48,6 @@ function PrizeBox({ index }: { index: number }) {
  */
 export default function ClawObject() {
   const entered = useEntered();
-  const ext = projectsOpenOnBehance() ? ({ target: "_blank", rel: "noopener noreferrer" } as const) : {};
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const viewRef = useRef<ClawView | null>(null);
@@ -323,7 +322,7 @@ export default function ClawObject() {
                       </span>
                       <a
                         href={projectHref(prizeProject)}
-                        {...ext}
+                        {...linkTarget(prizeProject)}
                         className="relative w-fit rounded-full bg-vermilion font-semibold text-white outline-none transition-transform before:absolute before:-inset-2 hover:scale-[1.05] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
                         style={{ padding: "0.9cqw 2.2cqw", fontSize: "max(0.625rem, 2.5cqw)" }}
                         data-cursor-label="Open"
@@ -431,7 +430,7 @@ export default function ClawObject() {
             <li key={p.slug}>
               <a
                 href={projectHref(p)}
-                {...ext}
+                {...linkTarget(p)}
                 className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-24 focus:z-50 focus:rounded-full focus:bg-ink focus:px-4 focus:py-2 focus:text-[0.875rem] focus:font-medium focus:text-paper"
               >
                 {displayTitle(p)}, {p.year}

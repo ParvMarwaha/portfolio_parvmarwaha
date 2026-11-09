@@ -10,7 +10,8 @@ import { getLenis } from "@/utils/lenis";
  * The project images as a two-column wall. Click one to open it full screen; arrow keys (or a swipe)
  * move through them, Esc closes.
  */
-export default function Gallery({ images, label }: { images: string[]; label: string }) {
+export default function Gallery({ images, label, columns = 2, first = 2 }: { images: string[]; label: string; columns?: 1 | 2; first?: number }) {
+  // `first` is the number the first image is counted as: 2 on a project page, where the cover is number one.
   const [open, setOpen] = useState<number | null>(null);
   const touch = useRef<{ x: number; y: number } | null>(null);
   const total = images.length;
@@ -45,19 +46,19 @@ export default function Gallery({ images, label }: { images: string[]; label: st
 
   return (
     <>
-      <div className="columns-1 gap-4 md:columns-2 md:gap-6">
+      <div className={`columns-1 gap-4 md:gap-6 ${columns === 2 ? "md:columns-2" : ""}`}>
         {images.map((src, i) => (
           <Reveal key={src} className="mb-4 break-inside-avoid md:mb-6" delay={(i % 2) * 90}>
             <button
               type="button"
               onClick={() => setOpen(i)}
               className="group relative block w-full overflow-hidden bg-paper-2 text-left"
-              aria-label={`Open image ${i + 2} of ${total + 1}`}
+              aria-label={`Open image ${i + first} of ${total + first - 1}`}
               data-cursor-label="Zoom"
             >
               <RemoteImage
                 src={src}
-                alt={`${label}, image ${i + 2}`}
+                alt={`${label}, image ${i + first}`}
                 loading="lazy"
                 className="w-full transition-transform duration-[900ms] ease-out group-hover:scale-[1.03]"
               />
@@ -101,14 +102,14 @@ export default function Gallery({ images, label }: { images: string[]; label: st
               >
                 <RemoteImage
                   src={images[open]}
-                  alt={`${label}, image ${open + 2}`}
+                  alt={`${label}, image ${open + first}`}
                   className="max-h-[86svh] max-w-[92vw] select-none object-contain shadow-[0_40px_90px_-30px_rgba(0,0,0,0.8)]"
                 />
               </motion.div>
             </AnimatePresence>
 
             <p className="label pointer-events-none absolute left-1/2 top-5 -translate-x-1/2 text-on-deep/70 md:top-7">
-              {String(open + 2).padStart(2, "0")} / {String(total + 1).padStart(2, "0")}
+              {String(open + first).padStart(2, "0")} / {String(total + first - 1).padStart(2, "0")}
             </p>
             <button
               type="button"

@@ -1,6 +1,6 @@
 "use client";
 
-import { projects, type ProjectType } from "@/content/projects";
+import { projects, isOfType, type ProjectType } from "@/content/projects";
 import { site } from "@/content/site";
 import { getLenis, rem } from "@/utils/lenis";
 import Reveal from "@/components/ui/Reveal";
@@ -10,7 +10,7 @@ import Reveal from "@/components/ui/Reveal";
  * selection box with a count, click it and the frames below are filtered to that kind.
  */
 function Layer({ type, children }: { type: ProjectType; children: React.ReactNode }) {
-  const n = projects.filter((p) => p.type === type).length;
+  const n = projects.filter((p) => isOfType(p, type)).length;
   const show = () => {
     window.dispatchEvent(new CustomEvent<ProjectType>("pm:filter", { detail: type }));
     const el = document.getElementById("work");

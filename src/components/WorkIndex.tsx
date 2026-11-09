@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { gsap } from "@/utils/gsap";
-import { projects, numberOf, displayTitle, projectHref, projectsOpenOnBehance, TYPES, type ProjectType } from "@/content/projects";
+import { projects, numberOf, displayTitle, projectHref, projectsOpenOnBehance, isOfType, TYPES, type ProjectType } from "@/content/projects";
 import RemoteImage from "@/components/ui/RemoteImage";
 
 const filters: ("All" | ProjectType)[] = ["All", ...TYPES];
@@ -27,7 +27,7 @@ export default function WorkIndex() {
     return () => window.removeEventListener("mousemove", move);
   }, []);
 
-  const rows = projects.filter((p) => filter === "All" || p.type === filter);
+  const rows = projects.filter((p) => filter === "All" || isOfType(p, filter));
   const active = projects.find((p) => p.slug === hover);
 
   return (
@@ -62,7 +62,7 @@ export default function WorkIndex() {
 
       <ul onPointerLeave={() => setHover(null)}>
         {rows.map((p) => {
-          const external = projectsOpenOnBehance();
+          const external = projectsOpenOnBehance(p);
           const row = (
             <>
               <span className="label">

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { projects, projectHref, projectsOpenOnBehance } from "@/content/projects";
+import { projects, projectHref, linkTarget } from "@/content/projects";
 import { Coil, H, PackArt, REST_TOP, SHELF_H, TRAY_MAX, W, CELL_W, codeOf, packLeft, packTop, restRot } from "./v1-parts";
 import { vendSound } from "./v1-sound";
 
@@ -439,7 +439,6 @@ export default function VendingMachine() {
   const marquee = shown.text.length > 10;
   const needRestock = stock.some((s) => !s);
   const litRow = entry ? "ABC".indexOf(entry) : -1;
-  const ext = projectsOpenOnBehance() ? ({ target: "_blank", rel: "noopener noreferrer" } as const) : {};
 
   return (
     <div
@@ -640,7 +639,7 @@ export default function VendingMachine() {
                   <div className={t.leaving ? `vend-${t.leaving}` : undefined}>
                     <a
                       href={projectHref(p)}
-                      {...ext}
+                      {...linkTarget(p)}
                       className="vend-take"
                       data-cursor-label="Take it"
                       aria-label={`Take it: open ${p.title}, ${p.year}`}

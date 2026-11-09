@@ -1,5 +1,5 @@
 import { site } from "@/content/site";
-import { projects, displayTitle, type Project } from "@/content/projects";
+import { projects, displayTitle, isOfType, type Project, type ProjectType } from "@/content/projects";
 
 /**
  * Kern's brain, free and offline: no AI service, nothing leaves the browser. A question is matched against topics
@@ -39,7 +39,7 @@ const pick = <T,>(list: T[], avoid?: T) => {
   return options[Math.floor(Math.random() * options.length)];
 };
 
-const ofKind = (type: string) => projects.filter((p) => p.type === type);
+const ofKind = (type: string) => projects.filter((p) => isOfType(p, type as ProjectType));
 const names = (list: Project[]) => {
   const t = list.map((p) => p.title);
   return t.length <= 1 ? t.join("") : `${t.slice(0, -1).join(", ")} and ${t[t.length - 1]}`;

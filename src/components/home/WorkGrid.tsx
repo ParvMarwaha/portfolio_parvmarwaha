@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { projects, displayTitle, projectHref, projectsOpenOnBehance, TYPES, type Project, type ProjectType } from "@/content/projects";
+import { projects, displayTitle, projectHref, projectsOpenOnBehance, isOfType, TYPES, type Project, type ProjectType } from "@/content/projects";
 import RemoteImage from "@/components/ui/RemoteImage";
 import { usePageEnter } from "./usePageEnter";
 
@@ -15,7 +15,7 @@ const filters: ("All" | ProjectType)[] = ["All", ...TYPES];
  */
 function Frame({ project, onOpen }: { project: Project; onOpen: (href: string, el: HTMLElement) => void }) {
   const href = projectHref(project);
-  const external = projectsOpenOnBehance();
+  const external = projectsOpenOnBehance(project);
   const rootRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
@@ -128,7 +128,7 @@ function Frame({ project, onOpen }: { project: Project; onOpen: (href: string, e
 export default function WorkGrid() {
   const [filter, setFilter] = useState<(typeof filters)[number]>("All");
   const { enter, overlay } = usePageEnter();
-  const rows = projects.filter((p) => filter === "All" || p.type === filter);
+  const rows = projects.filter((p) => filter === "All" || isOfType(p, filter));
 
   useEffect(() => {
     const onFilter = (e: Event) => setFilter((e as CustomEvent<ProjectType>).detail);
@@ -141,7 +141,7 @@ export default function WorkGrid() {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 md:mb-8">
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2" role="group" aria-label="Filter by type">
           {filters.map((f) => {
-            const n = f === "All" ? projects.length : projects.filter((p) => p.type === f).length;
+            const n = f === "All" ? projects.length : projects.filter((p) => isOfType(p, f)).length;
             const on = filter === f;
             return (
               <button

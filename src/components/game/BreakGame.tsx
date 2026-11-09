@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { projectHref, projects, projectsOpenOnBehance, getProject } from "@/content/projects";
+import { projectHref, projects, linkTarget, getProject } from "@/content/projects";
 import { duckMusic, gameSound, toggleAmbient, useAmbient } from "@/utils/ambient";
 import { Game, LEVELS, setPalette, type GameState } from "./engine";
 
@@ -206,7 +206,6 @@ export default function BreakGame() {
 
   const slots = Math.max(3, state.lives);
   const found = state.found.map((slug) => getProject(slug)).filter((x) => x !== undefined);
-  const external = projectsOpenOnBehance();
 
   return (
     <div ref={shellRef} className="fixed inset-0 z-20 select-none overflow-hidden bg-deep text-on-deep">
@@ -337,7 +336,7 @@ export default function BreakGame() {
                         <a
                           key={pr.slug}
                           href={projectHref(pr)}
-                          {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                          {...linkTarget(pr)}
                           className="rounded-full px-3.5 py-1.5 text-[0.8125rem] font-medium tracking-normal ring-1 ring-on-deep/35 transition-colors hover:bg-on-deep hover:text-deep"
                         >
                           {pr.title} ↗
