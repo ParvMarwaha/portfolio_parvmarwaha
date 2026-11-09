@@ -16,7 +16,7 @@ export const site = {
   // DRAFT: cover, intro and hire copy. The intro is split so the middle part can be set in the serif.
   availability: "Available for freelance & full-time",
   coverLine: "designing stuff that actually ships.",
-  intro: ["I'm Parv, a ", "designer", " from India. I design interfaces, brands and motion, and I can build and ship them too."],
+  intro: ["I'm Parv, a ", "designer", " from India. I design interfaces, shape identities and build experiences that leave an impression."],
   // The tools I work in (shown on Home and About), and a note on how AI fits in. DRAFT wording, rewrite freely.
   tools: ["Figma", "After Effects", "Claude", "Antigravity", "Illustrator"],
   aiNote: {

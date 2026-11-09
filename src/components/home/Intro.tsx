@@ -57,14 +57,9 @@ export default function Intro() {
           <p className="text-balance text-[clamp(2.125rem,4.4vw,4.5rem)] font-medium leading-[1.06] tracking-[-0.035em] text-ink">
             {/* The same words as site.intro, with the kinds of work as selectable layers */}
             I&apos;m Parv, a <em className="font-display font-normal italic">designer</em> from India. I design{" "}
-            <span className="whitespace-nowrap">
-              <Layer type="UI/UX">interfaces</Layer>,
-            </span>{" "}
-            <Layer type="Branding">brands</Layer> and{" "}
-            <span className="whitespace-nowrap">
-              <Layer type="Motion">motion</Layer>,
-            </span>{" "}
-            and I can build and ship them too.
+            <Layer type="UI/UX">interfaces</Layer>, shape{" "}
+            <Layer type="Branding">identities</Layer> and build{" "}
+            <Layer type="Motion">experiences</Layer> that leave an impression.
           </p>
         </Reveal>
 
