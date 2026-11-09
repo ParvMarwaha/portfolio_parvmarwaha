@@ -5,7 +5,6 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { projects, displayTitle, projectHref, projectsOpenOnBehance, isOfType, TYPES, type Project, type ProjectType } from "@/content/projects";
 import RemoteImage from "@/components/ui/RemoteImage";
-import { usePageEnter } from "./usePageEnter";
 
 // Only the kinds there is work for (no empty filter).
 const filters: ("All" | ProjectType)[] = ["All", ...TYPES.filter((t) => projects.some((p) => isOfType(p, t)))];
@@ -14,7 +13,7 @@ const filters: ("All" | ProjectType)[] = ["All", ...TYPES.filter((t) => projects
  * One project as a frame on the canvas: the frame's name above it (like a design file), the cover, and on hover the
  * frame gets selected and a comment card with the summary and a way in appears.
  */
-function Frame({ project, onOpen }: { project: Project; onOpen: (href: string, el: HTMLElement) => void }) {
+function Frame({ project }: { project: Project }) {
   const href = projectHref(project);
   const external = projectsOpenOnBehance(project);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -105,19 +104,8 @@ function Frame({ project, onOpen }: { project: Project; onOpen: (href: string, e
           {body}
         </a>
       ) : (
-        <Link
-          href={href}
-          onClick={(e) => {
-            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-            e.preventDefault();
-            const frame = e.currentTarget.querySelector<HTMLElement>("[data-card-image]");
-            if (frame) onOpen(href, frame);
-            else window.location.assign(href);
-          }}
-          className="group block"
-          data-no-curtain
-          data-cursor-label="Open"
-        >
+        // Opens behind the same curtain as every other page change on the site.
+        <Link href={href} className="group block" data-cursor-label="Open">
           {body}
         </Link>
       )}
@@ -128,7 +116,6 @@ function Frame({ project, onOpen }: { project: Project; onOpen: (href: string, e
 /** All the work as frames on the canvas, with page-tab style filters. The words in the intro can pick a filter too. */
 export default function WorkGrid() {
   const [filter, setFilter] = useState<(typeof filters)[number]>("All");
-  const { enter, overlay } = usePageEnter();
   const rows = projects.filter((p) => filter === "All" || isOfType(p, filter));
 
   useEffect(() => {
@@ -175,12 +162,11 @@ export default function WorkGrid() {
               exit={{ opacity: 0, scale: 0.97 }}
               transition={{ duration: 0.45, ease: [0.2, 0.9, 0.2, 1] }}
             >
-              <Frame project={p} onOpen={enter} />
+              <Frame project={p} />
             </motion.li>
           ))}
         </AnimatePresence>
       </motion.ul>
-      {overlay}
     </section>
   );
 }

@@ -5,7 +5,8 @@ import RemoteImage from "@/components/ui/RemoteImage";
 
 /**
  * A picture that opens into place the first time it scrolls into view: its frame unclips from a slightly smaller
- * rounded window while the image settles from a gentle zoom, the way the home page's pictures arrive.
+ * rounded window and fades up. The picture itself never changes size, so nothing grows and then shrinks.
+ * An `eager` picture is the one at the top of the page: it is simply there when the page opens, no motion at all.
  */
 export default function RevealImage({ src, alt, eager = false, className = "" }: { src: string; alt: string; eager?: boolean; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -13,7 +14,7 @@ export default function RevealImage({ src, alt, eager = false, className = "" }:
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (eager || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       el.dataset.shown = "1";
       return;
     }
@@ -28,18 +29,21 @@ export default function RevealImage({ src, alt, eager = false, className = "" }:
     );
     io.observe(el);
     return () => io.disconnect();
-  }, []);
+  }, [eager]);
 
   return (
     <div
       ref={ref}
-      className={`group/reveal overflow-hidden transition-[clip-path] duration-[1100ms] ease-[cubic-bezier(.22,1,.36,1)] [clip-path:inset(6%_5%_6%_5%_round_1rem)] data-[shown=1]:[clip-path:inset(0%_0%_0%_0%_round_0rem)] ${className}`}
+      data-shown={eager ? "1" : undefined}
+      className={`overflow-hidden ${
+        eager ? "" : "opacity-0 transition-[clip-path,opacity] duration-[1000ms] ease-[cubic-bezier(.22,1,.36,1)] [clip-path:inset(4%_3%_4%_3%_round_1rem)] data-[shown=1]:opacity-100 data-[shown=1]:[clip-path:inset(0%_0%_0%_0%_round_0rem)]"
+      } ${className}`}
     >
       <RemoteImage
         src={src}
         alt={alt}
         loading={eager ? "eager" : "lazy"}
-        className="block h-auto w-full scale-[1.08] transition-transform duration-[1400ms] ease-[cubic-bezier(.22,1,.36,1)] group-data-[shown=1]/reveal:scale-100"
+        className="block h-auto w-full"
       />
     </div>
   );
