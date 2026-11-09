@@ -1,0 +1,1 @@
+__d(function(g,r,i,a,m,e,d){"use strict";Object.defineProperty(e,'__esModule',{value:!0}),Object.defineProperty(e,"default",{enumerable:!0,get:function(){return o}});var t=r(d[0]),n=r(d[1]),s=r(d[2]),u=r(d[3]);function o(){const{nextLessonId:o}=(0,s.useProgress)(),c=(0,n.getLesson)(o);return(0,u.jsx)(t.Redirect,{href:`/modules/${c.moduleId}`})}},768,[781,796,783,6]);

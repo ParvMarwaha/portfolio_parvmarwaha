@@ -35,6 +35,8 @@ export interface Project {
   team?: Person[];
   /** This project's own page on Behance. Work that is not on Behance opens its page on this site instead. */
   behance?: string;
+  /** Has its own case study on this site, so it opens here even though it is also on Behance. */
+  page?: boolean;
   /** Other kinds it also counts as in the filters ("Branding" for a project that is mostly UI/UX). */
   also?: ProjectType[];
 }
@@ -67,6 +69,7 @@ export const projects: Project[] = [
   },
   {
     slug: "varnmala",
+    page: true,
     behance: "https://www.behance.net/gallery/226426649/Varnmala-UIUX",
     accent: "#F25C2A",
     title: "Varnmala",
@@ -217,7 +220,7 @@ export const projects: Project[] = [
  */
 export const PROJECT_LINKS: "behance" | "pages" = "behance";
 /** Whether this project's link leaves the site (a Behance page in a new tab). */
-export const projectsOpenOnBehance = (p: Project) => PROJECT_LINKS === "behance" && !!p.behance;
+export const projectsOpenOnBehance = (p: Project) => PROJECT_LINKS === "behance" && !!p.behance && !p.page;
 export const projectHref = (p: Project) => (projectsOpenOnBehance(p) && p.behance ? p.behance : `/work/${p.slug}`);
 /** New-tab attributes for a link that leaves the site; nothing for one that stays. */
 export const linkTarget = (p: Project) => (projectsOpenOnBehance(p) ? ({ target: "_blank", rel: "noopener noreferrer" } as const) : {});
