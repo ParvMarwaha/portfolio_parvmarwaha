@@ -82,6 +82,12 @@ const POKES: { line: string; act: "hop" | "spin" | "dizzy" | "stretch" | "confet
 ];
 
 const WORK = projects.slice(0, 8);
+
+// What Kern says first: it has just set the name straight, and it can pull work out of any letter.
+const HELLO = {
+  text: "Hi, I'm Kern. Just fixed his kerning. Tap any letter and I'll pull some work out of it.",
+  mini: "Hi, I'm Kern! Tap a letter, I'll find work.",
+};
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 
 
@@ -136,10 +142,13 @@ export default function HeroV7() {
     listen: (on: boolean) => void;
     act: (a: KernAction) => void;
     place: () => void;
+    pull: (i: number) => void;
   } | null>(null);
   // Phones get a one-line bubble (Kern is the show there, not a chat window); tapping Chat opens the full one.
   const [compact, setCompact] = useState(false);
   const [open, setOpen] = useState(false);
+  // The project Kern pulled out of a letter, placed over that letter (stage coordinates).
+  const [pulled, setPulled] = useState<{ key: number; i: number; x: number; bottom: number; w: number } | null>(null);
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -156,6 +165,13 @@ export default function HeroV7() {
     const ov = letters.map(() => 0);
     const otarget = letters.map(() => 0);
     const press = letters.map(() => 0);
+    // Vertical push and tilt on each letter (springs too): the badly set name of the entrance, a pressed letter.
+    const oy = letters.map(() => 0);
+    const oyv = letters.map(() => 0);
+    const oyt = letters.map(() => 0);
+    const orot = letters.map(() => 0);
+    const orotT = letters.map(() => 0);
+    const fixed = letters.map(() => true);
 
     // ---- geometry (layout px inside the stage; the sticky cover scales slightly, so divide screen px by `scale`)
     let W = 0;
@@ -197,7 +213,7 @@ export default function HeroV7() {
           inkTop = (h - (fa + fd)) / 2 + fa - m.actualBoundingBoxAscent;
         }
         // getBoundingClientRect includes the current push; store the resting position.
-        return { x: (lr.left - r.left) / scale - ox[i], w: lr.width / scale, top: (lr.top - r.top) / scale + inkTop, line: Math.round(el.offsetTop) };
+        return { x: (lr.left - r.left) / scale - ox[i], w: lr.width / scale, top: (lr.top - r.top) / scale + inkTop - oy[i], line: Math.round(el.offsetTop) };
       });
       boards = Array.from(stage.querySelectorAll<HTMLElement>("[data-board]"))
         .map((el) => el.getBoundingClientRect())
@@ -221,7 +237,7 @@ export default function HeroV7() {
       const now = performance.now();
       if (now - surfAt < 4) return surf;
       surfAt = now;
-      surf = boxes.map((b, i) => ({ x: b.x + ox[i], w: b.w, top: b.top })).concat(bridges, boards);
+      surf = boxes.map((b, i) => ({ x: b.x + ox[i], w: b.w, top: b.top + oy[i] })).concat(bridges, boards);
       return surf;
     };
     // The highest surface under Kern that is not above it: a letter top, a word space, or the stage floor.
@@ -272,6 +288,8 @@ export default function HeroV7() {
       poseUntil: 0,
       kernAt: 0,
       listening: false, // the bubble has reply chips: stay put so they don't run away from the cursor
+      rush: false, // the entrance run: faster than any stroll
+      fixing: false, // setting each letter straight as Kern passes it
     };
     // Where the cursor is, how fast it moves, and since when it has been resting (Kern only walks over to a cursor that
     // has settled, so it doesn't chase every twitch).
@@ -350,6 +368,44 @@ export default function HeroV7() {
           { duration: 900 + Math.random() * 500, easing: "cubic-bezier(.2,.8,.4,1)" }
         ).onfinish = () => p.remove();
       }
+    };
+
+    // The entrance: the name starts out badly set: letters too close, too far, off the baseline, a little crooked.
+    if (!reduced) {
+      // Each word drifts around its own centre (so it never spills off the screen): some letters bunched, some apart.
+      let start = 0;
+      for (const word of LINES) {
+        const idx = Array.from({ length: word.length }, (_, k) => start + k);
+        let acc = 0;
+        const offs = idx.map(() => (acc += (Math.random() - 0.5) * fs * 0.3));
+        const mean = offs.reduce((a, b) => a + b, 0) / offs.length;
+        idx.forEach((i, k) => {
+          ox[i] = otarget[i] = clamp(offs[k] - mean, -fs * 0.35, fs * 0.35);
+          oy[i] = oyt[i] = (Math.random() - 0.5) * fs * 0.2;
+          orot[i] = orotT[i] = (Math.random() - 0.5) * 16;
+          fixed[i] = false;
+        });
+        start += word.length;
+      }
+    }
+    // Set a letter straight (Kern just passed it), showing how far it was off.
+    let lastShove = 0;
+    const fix = (i: number) => {
+      fixed[i] = true;
+      const off = otarget[i];
+      otarget[i] = 0;
+      oyt[i] = 0;
+      orotT[i] = 0;
+      ov[i] -= off * 6;
+      // a little heavier as it lands (not much: many letters at once must not widen the name)
+      press[i] = Math.max(press[i], 0.4);
+      if (tagRef.current) tagRef.current.dataset.kern = `${off > 0 ? "−" : "+"}${Math.abs(Math.round(off))}`;
+      const now = performance.now();
+      if (now - lastShove > 70) {
+        lastShove = now;
+        shove();
+      }
+      s.sq = 0.18;
     };
 
     // ---- actions
@@ -510,7 +566,47 @@ export default function HeroV7() {
       }
     };
 
+    // A tap on a letter: run to it, press it, and pull a project out of it.
+    const pull = (i: number) => {
+      const b = boxes[i];
+      // not while it is still setting the name straight
+      if (!b || s.mode === "hidden" || s.fixing) return;
+      s.lastInput = performance.now();
+      s.sleeping = false;
+      setNode(null);
+      setPulled(null);
+      const cx = b.x + ox[i] + b.w / 2;
+      const go = () => {
+        setPose("up", 1200);
+        setF("wow", 900);
+        press[i] = 1;
+        shove();
+        later(() => {
+          const w = clamp(W * 0.36, 168, 300);
+          const h = w * 0.625 + 64;
+          const x = clamp(cx, w / 2 + 8, W - w / 2 - 8);
+          // just above the name (on a phone, above both lines, so the card never covers a word)
+          const nameTop = boxes.reduce((m, bx, j) => Math.min(m, bx.top + oy[j]), Infinity);
+          const bottom = Math.max(nameTop - 10, ceil + h + 8);
+          setPulled({ key: performance.now(), i, x, bottom, w });
+          sparkle();
+          setF("happy", 1600);
+          // hop off the letter, out of the card's way
+          if (s.mode === "ground") {
+            jump(0.7);
+            s.vx = (cx > W / 2 ? -1 : 1) * 260;
+          }
+          s.busy = false;
+        }, reduced ? 0 : 260);
+      };
+      s.busy = true;
+      s.dash = true;
+      if (reduced) go();
+      else walkTo(cx, go);
+    };
+
     api.current = {
+      pull,
       // New words in the bubble: measure and place it before the browser paints, not on the next animation frame
       // (that frame can come late on a busy phone, and the bubble showed up half off screen, then jumped).
       place: () => {
@@ -588,8 +684,9 @@ export default function HeroV7() {
       }
     };
     const drop = () => {
-      const b = boxes[1] ?? boxes[0];
-      s.x = b ? b.x + b.w / 2 : W * 0.3;
+      // It starts at the very first letter, so it can run the whole name setting it straight.
+      const b = reduced ? (boxes[1] ?? boxes[0]) : boxes[0];
+      s.x = b ? b.x + (reduced ? b.w / 2 : b.w * 0.3) : W * 0.3;
       s.y = reduced ? floorAt(s.x, -Infinity) : K * 0.6;
       s.mode = reduced ? "ground" : "air";
       kern.style.transform = `translate3d(${(s.x - K / 2).toFixed(1)}px, ${(s.y - K).toFixed(1)}px, 0)`;
@@ -599,14 +696,40 @@ export default function HeroV7() {
         back = sessionStorage.getItem("pm-kern") === "1";
         sessionStorage.setItem("pm-kern", "1");
       } catch {}
-      later(
-        () => {
-          setNode(back ? "back" : "hello");
-          setPose("wave", 1800);
-          setF("happy");
-        },
-        reduced ? 150 : 900
-      );
+      const greet = () => {
+        setNode(back ? "back" : "hello");
+        setPose("wave", 1800);
+        setF("happy");
+      };
+      if (!reduced) {
+        // land, look along the mess, then run it
+        later(() => {
+          setF("wow", 900);
+          react("Ugh, this kerning.", 1100);
+        }, 650);
+        later(() => {
+          s.busy = true;
+          s.rush = true;
+          s.fixing = true;
+          const end = boxes.reduce((m, bx, i) => Math.max(m, bx.x + ox[i] + bx.w), 0);
+          walkTo(end - K * 0.2, () => {
+            letters.forEach((_, i) => !fixed[i] && fix(i));
+            s.rush = false;
+            later(() => {
+              if (tagRef.current) delete tagRef.current.dataset.kern;
+              measure();
+            }, 900);
+            jump(0.9);
+            sparkle();
+            later(() => {
+              s.busy = false;
+              // taps on letters wait until now, so a pull never cuts into the entrance
+              s.fixing = false;
+              greet();
+            }, 500);
+          });
+        }, 1500);
+      } else later(greet, reduced ? 150 : 900);
     };
     kern.addEventListener("kern:enter", enter);
 
@@ -801,6 +924,8 @@ export default function HeroV7() {
     let lookPt: { x: number; y: number; until: number } | null = null;
     const onStageDown = (e: PointerEvent) => {
       if (e.pointerType === "mouse" || kern.contains(e.target as Node) || bubbleRef.current?.contains(e.target as Node)) return;
+      // a tap on a letter is a pull (handled by the letter itself), not a "run over here"
+      if ((e.target as Element).closest?.("[data-li]")) return;
       Object.assign(tap, { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now() });
     };
     const onStageUp = (e: PointerEvent) => {
@@ -940,7 +1065,7 @@ export default function HeroV7() {
             cb?.();
           } else {
             s.facing = Math.sign(d) || s.facing;
-            const top = s.busy || s.dash ? 300 : 200;
+            const top = s.rush ? 560 : s.busy || s.dash ? 300 : 200;
             const want = Math.sign(d) * Math.min(top, Math.abs(d) * 4 + 20);
             s.wv += (want - s.wv) * Math.min(1, dt * (Math.abs(want) > Math.abs(s.wv) ? 5 : 9));
             const step = Math.abs(s.wv * dt) > Math.abs(d) ? d : s.wv * dt;
@@ -1156,9 +1281,19 @@ export default function HeroV7() {
       }
 
       // letters: spring their push, and set weight from the cursor and Kern's pressure
+      // The entrance: every letter Kern passes snaps into place.
+      if (s.fixing) {
+        letters.forEach((_, i) => {
+          const b = boxes[i];
+          if (!fixed[i] && b && b.x + ox[i] + b.w * 0.5 < s.x + K * 0.25) fix(i);
+        });
+      }
       letters.forEach((el, i) => {
         ov[i] += (-180 * (ox[i] - otarget[i]) - 16 * ov[i]) * dt;
         ox[i] += ov[i] * dt;
+        oyv[i] += (-210 * (oy[i] - oyt[i]) - 11 * oyv[i]) * dt;
+        oy[i] += oyv[i] * dt;
+        orot[i] += (orotT[i] - orot[i]) * Math.min(1, dt * (fixed[i] ? 14 : 3));
         press[i] *= Math.exp(-dt * 2.2);
         const b = boxes[i];
         let near = 0;
@@ -1172,7 +1307,11 @@ export default function HeroV7() {
         el.dataset.w = String(nw);
         const fw = String(Math.round(nw / 4) * 4);
         if (!coarse && el.style.fontWeight !== fw) el.style.fontWeight = fw;
-        const tr = Math.abs(ox[i]) > 0.2 ? `translateX(${ox[i].toFixed(1)}px)` : "";
+        const ty = oy[i];
+        const tr =
+          Math.abs(ox[i]) > 0.2 || Math.abs(ty) > 0.2 || Math.abs(orot[i]) > 0.1
+            ? `translate(${ox[i].toFixed(1)}px, ${ty.toFixed(1)}px)${Math.abs(orot[i]) > 0.1 ? ` rotate(${orot[i].toFixed(1)}deg)` : ""}`
+            : "";
         if (el.style.transform !== tr) el.style.transform = tr;
       });
     };
@@ -1322,7 +1461,7 @@ export default function HeroV7() {
 
           {/* The stage: the name, with Kern living on it; the space above is where Kern talks */}
           <div ref={stageRef} className="relative flex min-h-0 flex-1 select-none flex-col justify-end pb-[2svh]" style={{ touchAction: "pan-y" }}>
-            <h1 className="v7-name relative leading-[0.86] tracking-[-0.045em] text-paper">
+            <h1 className="v7-name relative leading-[0.86] tracking-[-0.045em] text-paper md:whitespace-nowrap">
               <span className="sr-only">Parv Marwaha</span>
               {LINES.map((ln) => (
                 <span key={ln} className="block whitespace-nowrap md:inline md:[&:not(:last-child)]:mr-[0.22em]" aria-hidden>
@@ -1334,7 +1473,10 @@ export default function HeroV7() {
                           ref={(el) => {
                             letterRefs.current[i] = el;
                           }}
-                          className="inline-block will-change-transform"
+                          data-li={i}
+                          onClick={() => api.current?.pull(i)}
+                          data-cursor-label="Pull"
+                          className="inline-block cursor-pointer will-change-transform"
                           style={{ fontWeight: 420 }}
                         >
                           {ch}
@@ -1348,6 +1490,48 @@ export default function HeroV7() {
 
             <div ref={confettiRef} className="pointer-events-none absolute inset-0 overflow-visible" aria-hidden />
 
+            {/* The project Kern pulled out of a letter */}
+            {pulled && (() => {
+              const pr = WORK[pulled.i % WORK.length];
+              return (
+                <div
+                  key={pulled.key}
+                  className="absolute z-30"
+                  style={{ left: pulled.x, top: pulled.bottom, width: pulled.w, transform: "translate(-50%, -100%)" }}
+                >
+                  <div className="origin-bottom motion-safe:animate-[kern-pull_0.6s_cubic-bezier(.2,1.5,.4,1)_both]">
+                    <a
+                      href={projectHref(pr)}
+                      {...linkTarget(pr)}
+                      className="block overflow-hidden rounded-[0.875rem] bg-paper text-ink shadow-[0_26px_50px_-20px_rgba(0,0,0,0.7)] ring-1 ring-ink/10 transition-transform duration-300 hover:-rotate-1 hover:scale-[1.03]"
+                      data-cursor-label="Open"
+                    >
+                      <span className="relative block aspect-[16/10] overflow-hidden" style={{ background: pr.accent }}>
+                        <RemoteImage src={pr.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                      </span>
+                      <span className="flex items-center justify-between gap-3 px-3 py-2.5">
+                        <span className="min-w-0">
+                          <span className="block truncate text-[0.875rem] font-semibold tracking-tight">{pr.title}</span>
+                          <span className="block truncate text-[0.75rem] text-mute">
+                            {pr.kind ?? pr.type} · {pr.year}
+                          </span>
+                        </span>
+                        <span className="shrink-0 rounded-full bg-ink px-2.5 py-1 text-[0.75rem] font-medium text-paper">Open ↗</span>
+                      </span>
+                    </a>
+                    <button
+                      type="button"
+                      aria-label="Put it back"
+                      onClick={() => setPulled(null)}
+                      className="absolute -right-2 -top-2 grid h-7 w-7 place-items-center rounded-full bg-ink text-[0.875rem] leading-none text-paper ring-2 ring-paper"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Kern's speech bubble: what it says, plus reply chips */}
             <div
               ref={bubbleRef}
@@ -1357,14 +1541,14 @@ export default function HeroV7() {
               {mini && (aside || line) && (
                 <div
                   key={aside ? `a-${aside}` : `m-${node ?? ""}`}
-                  className="relative flex max-w-[19rem] flex-col items-start gap-2 rounded-[1.1rem] bg-ink px-3.5 py-2.5 text-paper shadow-[0_18px_36px_-16px_rgba(0,0,0,0.6)] ring-1 ring-paper/10 motion-safe:animate-[kern-pop_0.34s_cubic-bezier(.2,1.4,.4,1)]"
+                  className="relative flex max-w-[19rem] flex-col items-start gap-2 rounded-[1.1rem] bg-ink px-3.5 py-2.5 text-paper shadow-[0_18px_36px_-16px_rgba(0,0,0,0.6)] ring-1 ring-paper/10 motion-safe:animate-[kern-bubble-pop_0.34s_cubic-bezier(.2,1.4,.4,1)]"
                 >
                   <p className="text-[0.875rem] font-medium leading-snug tracking-tight">
                     {aside ??
                       (node && node.startsWith("t")
                         ? line?.text
                         : node === "hello"
-                          ? "Hi, I'm Kern! Fling me, or tap the name."
+                          ? HELLO.mini
                           : node === "back"
                             ? "You're back! Toss me around."
                             : "Still here. Want to keep chatting?")}
@@ -1389,7 +1573,7 @@ export default function HeroV7() {
               {!mini && (aside || line) && (
                 <div
                   key={aside ? `a-${aside}` : (node ?? "")}
-                  className={`relative rounded-[1.25rem] bg-ink p-3 text-paper md:p-4 ${compact ? "pt-11" : ""} shadow-[0_22px_44px_-18px_rgba(0,0,0,0.6)] ring-1 ring-paper/10 motion-safe:animate-[kern-pop_0.34s_cubic-bezier(.2,1.4,.4,1)]`}
+                  className={`relative rounded-[1.25rem] bg-ink p-3 text-paper md:p-4 ${compact ? "pt-11" : ""} shadow-[0_22px_44px_-18px_rgba(0,0,0,0.6)] ring-1 ring-paper/10 motion-safe:animate-[kern-bubble-pop_0.34s_cubic-bezier(.2,1.4,.4,1)]`}
                 >
                   {compact && (
                     <button
@@ -1458,7 +1642,7 @@ export default function HeroV7() {
                     </>
                   ) : (
                     <>
-                      <p className="text-[0.875rem] font-medium leading-snug tracking-tight md:text-[0.9375rem]">{line?.text}</p>
+                      <p className="text-[0.875rem] font-medium leading-snug tracking-tight md:text-[0.9375rem]">{node === "hello" ? HELLO.text : line?.text}</p>
                       {line && line.chips.length > 0 && (
                         <div className="mt-2.5 flex flex-wrap gap-1.5 md:mt-3">
                           {line.chips.map((c) => (
@@ -1592,7 +1776,8 @@ export default function HeroV7() {
         .v7-up{transition:transform 1s cubic-bezier(.16,1,.3,1) .55s,opacity .7s ease .55s}
         [data-entered="false"] .v7-up{opacity:0;transform:translate3d(0,1.5rem,0)}
         @media (prefers-reduced-motion:reduce){.v7-in,.v7-up{transition:none}[data-entered="false"] .v7-in,[data-entered="false"] .v7-up{opacity:1;transform:none}}
-        @keyframes kern-pop{from{opacity:0;transform:translateY(8px) scale(.92)}to{opacity:1;transform:none}}
+        @keyframes kern-pull{0%{opacity:0;transform:translateY(55%) scale(.12) rotate(-14deg)}55%{opacity:1}100%{opacity:1;transform:translateY(0) scale(1) rotate(-2deg)}}
+        @keyframes kern-bubble-pop{from{opacity:0;transform:translateY(8px) scale(.92)}to{opacity:1;transform:none}}
       `}</style>
     </div>
   );

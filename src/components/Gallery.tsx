@@ -10,7 +10,20 @@ import { getLenis } from "@/utils/lenis";
  * The project images as a two-column wall. Click one to open it full screen; arrow keys (or a swipe)
  * move through them, Esc closes.
  */
-export default function Gallery({ images, label, columns = 2, first = 2 }: { images: string[]; label: string; columns?: 1 | 2; first?: number }) {
+export default function Gallery({
+  images,
+  label,
+  columns = 2,
+  first = 2,
+  framed = false,
+}: {
+  images: string[];
+  label: string;
+  columns?: 1 | 2;
+  first?: number;
+  /** Rounded, outlined frames, as on the case-study pages. */
+  framed?: boolean;
+}) {
   // `first` is the number the first image is counted as: 2 on a project page, where the cover is number one.
   const [open, setOpen] = useState<number | null>(null);
   const touch = useRef<{ x: number; y: number } | null>(null);
@@ -52,7 +65,7 @@ export default function Gallery({ images, label, columns = 2, first = 2 }: { ima
             <button
               type="button"
               onClick={() => setOpen(i)}
-              className="group relative block w-full overflow-hidden bg-paper-2 text-left"
+              className={`group relative block w-full overflow-hidden bg-paper-2 text-left ${framed ? "rounded-[0.875rem] ring-1 ring-ink/10" : ""}`}
               aria-label={`Open image ${i + first} of ${total + first - 1}`}
               data-cursor-label="Zoom"
             >

@@ -167,7 +167,7 @@ function ProjectFace({ spec }: { spec: StickerSpec }) {
         />
         <span className="lid3-ribbon" style={{ bottom: `${SHAPES[spec.shape].rb}%`, fontSize: `${spec.rf ?? 0.9}em` }}>
           <i className="lid3-dot" style={{ background: p.accent }} />
-          <span>{RIBBONS[spec.project ?? 0]}</span>
+          <span>{RIBBONS[p.slug] ?? p.title}</span>
         </span>
       </Body>
     </a>

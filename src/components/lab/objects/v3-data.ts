@@ -121,7 +121,8 @@ export const SHAPES: Record<ShapeId, ShapeDef> = {
 };
 
 /** The ribbon on each project sticker (the full title stays on the link as its accessible name). */
-export const RIBBONS = ["Sangeet\nSathi", "sparq", "Case study", "Varnmala", "Alone", "shapes", "Apple", "sout"];
+// Short labels for the project stickers' ribbons, by project (anything not listed uses its title).
+export const RIBBONS: Record<string, string> = { "sangeet-sathi": "Sangeet\nSathi", "a-research-case-study": "Case study", "apple-motion-design": "Apple", "roots-foundation": "Roots" };
 
 const at = (x: number, y: number, w: number, r: number, f?: number): Place => ({ x, y, w, r, f });
 

@@ -47,10 +47,22 @@ export default function PageTransition() {
     arrived.current = null;
   }, [pathname]);
 
+  // Remember the page the visitor came from inside the site (the Back link on project pages uses it); a fresh load
+  // starts clean, so a page opened directly has no "back".
+  const prevPath = useRef<string | null>(null);
+  useEffect(() => {
+    try {
+      if (prevPath.current === null) sessionStorage.removeItem("pm-came-from");
+      else if (prevPath.current !== pathname) sessionStorage.setItem("pm-came-from", prevPath.current);
+    } catch {}
+    prevPath.current = pathname;
+  }, [pathname]);
+
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-    const run = async (href: string, pathnameTo: string) => {
+    // `back`: the way back from a project page, through the history, so the page you return to keeps its scroll.
+    const run = async (href: string, pathnameTo: string, back = false) => {
       const root = rootRef.current;
       if (!root) return router.push(href);
       busy.current = true;
@@ -94,13 +106,16 @@ export default function PageTransition() {
       const there = new Promise<void>((r) => {
         arrived.current = r;
       });
-      router.push(href);
+      if (back) router.back();
+      else router.push(href);
       // A page that has to compile first (in development) can take a few seconds; keep the panels up until it is here.
       await Promise.race([there, wait(10000)]);
       await wait(180); // let the new page paint its first frame
       getLenis()?.resize();
-      getLenis()?.scrollTo(0, { immediate: true } as never);
-      window.scrollTo(0, 0);
+      if (!back) {
+        getLenis()?.scrollTo(0, { immediate: true } as never);
+        window.scrollTo(0, 0);
+      }
       window.setTimeout(() => getLenis()?.resize(), 700);
 
       const lift = gsap.timeline();
@@ -133,9 +148,21 @@ export default function PageTransition() {
       void run(url.pathname + url.search + url.hash, url.pathname);
     };
 
+    // The Back link on project pages asks for the curtain too, going back through the history.
+    const onBack = (e: Event) => {
+      const { to, back } = (e as CustomEvent<{ to: string; back: boolean }>).detail ?? {};
+      if (busy.current || !to) return;
+      if (reduced.matches) return back ? router.back() : router.push(to);
+      void run(to, to, back);
+    };
+
     // Capture phase: this runs before the framework sees the click.
     document.addEventListener("click", onClick, true);
-    return () => document.removeEventListener("click", onClick, true);
+    window.addEventListener("pm:back", onBack);
+    return () => {
+      document.removeEventListener("click", onClick, true);
+      window.removeEventListener("pm:back", onBack);
+    };
   }, [router]);
 
   return (

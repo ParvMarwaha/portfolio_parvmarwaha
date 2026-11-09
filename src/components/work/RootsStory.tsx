@@ -1,12 +1,16 @@
 import { Zilla_Slab, Plus_Jakarta_Sans } from "next/font/google";
-import RemoteImage from "@/components/ui/RemoteImage";
 import RootsColours from "./RootsColours";
 import BrowserFrame from "./BrowserFrame";
 import StoryIndex from "./StoryIndex";
+import BackLink from "./BackLink";
 import WeightType from "./WeightType";
 import PrototypeEmbed from "./PrototypeEmbed";
 import ResearchSplit from "./ResearchSplit";
 import NgoPicker from "./NgoPicker";
+import FlipBook from "./FlipBook";
+import RevealImage from "./RevealImage";
+import LogoStage from "./LogoStage";
+import { Band, H, Sub, Text, Bullets, Picture } from "./story";
 import { getProject } from "@/content/projects";
 
 // The two Roots typefaces, loaded only on this page. Zilla Slab comes in five fixed weights; Plus Jakarta Sans is
@@ -80,57 +84,34 @@ const HEURISTICS = [
   ["No help", "No FAQs for partners or donors."],
 ];
 
-const SECTIONS = [
-  { id: "overview", label: "Overview" },
-  { id: "challenge", label: "Challenge and approach" },
-  { id: "research", label: "Research" },
-  { id: "identity", label: "Brand identity" },
-  { id: "website", label: "Website" },
-  { id: "in-use", label: "Brand in use" },
-  { id: "outcome", label: "Outcome" },
+// The brand book, page by page, and where its chapters start.
+const BOOK = Array.from({ length: 104 }, (_, i) => `${R}/book/${String(i + 1).padStart(3, "0")}.webp`);
+const BOOK_CHAPTERS = [
+  { label: "Brand overview", page: 9 },
+  { label: "Brand core", page: 17 },
+  { label: "Logo system", page: 25 },
+  { label: "Colour system", page: 33 },
+  { label: "Typography", page: 41 },
+  { label: "Visual language", page: 49 },
+  { label: "Brand applications", page: 55 },
+  { label: "Social media", page: 67 },
+  { label: "Website guidelines", page: 73 },
+  { label: "Copy guidelines", page: 83 },
+  { label: "Co-branding", page: 89 },
+  { label: "File management", page: 95 },
+  { label: "Quick reference", page: 101 },
 ];
 
-/** A full-width band (white or grey, alternating) holding the page's one narrow column. */
-function Band({ id, grey = false, children }: { id: string; grey?: boolean; children: React.ReactNode }) {
-  return (
-    <section id={id} className={grey ? "bg-paper-2" : ""}>
-      <div className="mx-auto w-full max-w-[62rem] px-4 py-20 md:px-6 md:py-28">{children}</div>
-    </section>
-  );
-}
-
-function H({ children }: { children: React.ReactNode }) {
-  return <h2 className="text-[1.125rem] font-medium tracking-tight md:text-[1.25rem]">{children}</h2>;
-}
-
-function Sub({ children }: { children: React.ReactNode }) {
-  return <h3 className="text-[0.9375rem] font-medium tracking-tight">{children}</h3>;
-}
-
-function Text({ children }: { children: React.ReactNode }) {
-  return <p className="mt-4 max-w-[34rem] text-[0.9375rem] leading-relaxed text-ink/75">{children}</p>;
-}
-
-function Bullets({ items }: { items: string[] }) {
-  return (
-    <ul className="mt-4 grid gap-2.5 text-[0.9375rem] leading-relaxed text-ink/75">
-      {items.map((t) => (
-        <li key={t} className="grid grid-cols-[1rem_1fr]">
-          <span aria-hidden>•</span>
-          {t}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function Picture({ src, alt, className = "", tone = "bg-paper-2" }: { src: string; alt: string; className?: string; tone?: string }) {
-  return (
-    <div className={`overflow-hidden rounded-[0.875rem] ring-1 ring-ink/10 ${tone} ${className}`}>
-      <RemoteImage src={src} alt={alt} loading="lazy" className="block h-auto w-full" />
-    </div>
-  );
-}
+// Each section, with the picture that previews it when the index is hovered.
+const SECTIONS = [
+  { id: "overview", label: "Overview", preview: `${R}/cover.webp` },
+  { id: "challenge", label: "Challenge and approach", preview: `${R}/laptop-programs.webp` },
+  { id: "research", label: "Research", preview: `${R}/research-poster.webp`, fit: "top" as const },
+  { id: "identity", label: "Brand identity", preview: `${R}/logo.webp`, fit: "contain" as const },
+  { id: "website", label: "Website", preview: `${R}/home.webp`, fit: "top" as const },
+  { id: "in-use", label: "Brand in use", preview: `${R}/stationery.webp` },
+  { id: "outcome", label: "Outcome", preview: `${R}/laptop-agriculture.webp` },
+];
 
 /**
  * The Roots Foundation case study, kept quiet on purpose: a small title, the cover, then short sections in one narrow
@@ -149,10 +130,11 @@ export default function RootsStory() {
   return (
     <>
       <header className="mx-auto w-full max-w-[62rem] px-4 pt-28 md:px-6 md:pt-36">
+        <BackLink />
         <h1 className="text-[1.25rem] font-medium tracking-tight">Roots Foundation</h1>
         <p className="mt-1 text-[0.9375rem] text-mute">Brand identity and website · 2026</p>
         <div className="mt-8 overflow-hidden rounded-[1rem] bg-paper-2 ring-1 ring-ink/10">
-          <RemoteImage src={`${R}/cover.webp`} alt="The Roots Foundation website on a laptop" className="block h-auto w-full" />
+          <RevealImage src={`${R}/cover.webp`} alt="The Roots Foundation website on a laptop" eager />
         </div>
         <div className="mt-12 xl:hidden">
           <StoryIndex sections={SECTIONS} />
@@ -163,7 +145,7 @@ export default function RootsStory() {
         {/* On wide screens the index stays beside the column while you read */}
         <aside className="pointer-events-none absolute inset-y-0 left-0 hidden w-[calc((100%-62rem)/2)] xl:block">
           <div className="pointer-events-auto sticky top-32 ml-auto mr-10 mt-28 w-44">
-            <StoryIndex sections={SECTIONS} />
+            <StoryIndex sections={SECTIONS} peek="below" />
           </div>
         </aside>
 
@@ -305,8 +287,8 @@ export default function RootsStory() {
             A single source with roots spreading from it, held inside a circle: grounded, and still growing. It came out of three directions, chosen
             because it stays clear at any size.
           </Text>
-          <div className="mt-10 grid place-items-center rounded-[0.875rem] bg-[#FEFBF0] px-6 py-14 ring-1 ring-ink/10 md:py-20">
-            <RemoteImage src={`${R}/logo.webp`} alt="The Roots Foundation logo" loading="lazy" className="w-full max-w-[30rem]" />
+          <div className="mt-10">
+            <LogoStage src={`${R}/logo.webp`} alt="The Roots Foundation logo" />
           </div>
           <div className="mt-16">
             <H>Colour</H>
@@ -327,6 +309,13 @@ export default function RootsStory() {
                 <WeightType text="Plus Jakarta Sans" className={`${jakarta.className} text-[3.25rem] leading-none tracking-[-0.02em] md:text-[5.5rem]`} min={200} max={800} />
                 <p className="mt-3 text-[0.875rem] text-mute">Everything people read. Most of the site is reports, news and stories, and a clean, open sans keeps them easy.</p>
               </div>
+            </div>
+          </div>
+          <div className="mt-20">
+            <H>The brand book</H>
+            <Text>All of it written down, 104 pages, so the brand holds up when I am not in the room. Click or swipe a page to turn it.</Text>
+            <div className="mt-8">
+              <FlipBook pages={BOOK} ratio={1600 / 1131} chapters={BOOK_CHAPTERS} title="Roots Foundation brand book" />
             </div>
           </div>
         </Band>
@@ -387,7 +376,7 @@ export default function RootsStory() {
               <Sub>Try it</Sub>
               <p className="mt-2 max-w-[34rem] text-[0.9375rem] leading-relaxed text-ink/75">The clickable prototype, straight from Figma.</p>
               <div className="mt-6">
-                <PrototypeEmbed src={prototype} title="Roots Foundation website prototype" />
+                <PrototypeEmbed src={prototype} title="Roots Foundation website prototype" poster={`${R}/home.webp`} />
               </div>
             </div>
           )}

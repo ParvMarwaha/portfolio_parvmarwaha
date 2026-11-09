@@ -7,7 +7,8 @@ import { projects, displayTitle, projectHref, projectsOpenOnBehance, isOfType, T
 import RemoteImage from "@/components/ui/RemoteImage";
 import { usePageEnter } from "./usePageEnter";
 
-const filters: ("All" | ProjectType)[] = ["All", ...TYPES];
+// Only the kinds there is work for (no empty filter).
+const filters: ("All" | ProjectType)[] = ["All", ...TYPES.filter((t) => projects.some((p) => isOfType(p, t)))];
 
 /**
  * One project as a frame on the canvas: the frame's name above it (like a design file), the cover, and on hover the

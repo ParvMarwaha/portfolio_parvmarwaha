@@ -40,7 +40,7 @@ export default function KernCameo({ className = "", style }: { className?: strin
   return (
     <div className={`pointer-events-auto absolute select-none ${className}`} style={style} aria-hidden>
       {line && (
-        <p className="absolute bottom-full left-1/2 mb-3 w-max max-w-[16rem] -translate-x-1/2 rounded-2xl bg-ink px-3.5 py-2 text-[0.875rem] font-medium leading-snug tracking-tight text-paper shadow-[0_14px_30px_-16px_rgba(0,0,0,0.6)] motion-safe:animate-[kern-pop_0.3s_cubic-bezier(.2,1.4,.4,1)]">
+        <p className="absolute bottom-full left-1/2 mb-3 w-max max-w-[16rem] -translate-x-1/2 rounded-2xl bg-ink px-3.5 py-2 text-[0.875rem] font-medium leading-snug tracking-tight text-paper shadow-[0_14px_30px_-16px_rgba(0,0,0,0.6)] motion-safe:animate-[kern-cameo-pop_0.3s_cubic-bezier(.2,1.4,.4,1)]">
           {line}
           <span className="absolute -bottom-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 bg-ink" />
         </p>
@@ -65,7 +65,7 @@ export default function KernCameo({ className = "", style }: { className?: strin
       <style>{`
         @keyframes kern-bob{0%,100%{transform:translateY(0) scale(1,1)}50%{transform:translateY(0) scale(1.03,.97)}}
         @keyframes kern-hop{0%{transform:translateY(0) scale(1.15,.8)}40%{transform:translateY(-55%) scale(.92,1.1)}75%{transform:translateY(0) scale(1.1,.88)}100%{transform:none}}
-        @keyframes kern-pop{from{opacity:0;transform:translate(-50%,6px) scale(.92)}to{opacity:1;transform:translate(-50%,0)}}
+        @keyframes kern-cameo-pop{from{opacity:0;transform:translate(-50%,6px) scale(.92)}to{opacity:1;transform:translate(-50%,0)}}
       `}</style>
     </div>
   );

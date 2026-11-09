@@ -173,7 +173,7 @@ const TOPICS: Topic[] = [
     words: ["project", "projects", "work", "portfolio", "show me", "examples", "case studies", "case study"],
     replies: () => [
       `${projects.length} projects so far: ${names(projects.slice(0, 5))} and more. They're the frames right below me.`,
-      `Scroll down: ${projects.length} frames, from ${names(projects.slice(0, 3))} to motion pieces and illustration. Or try "Show me the work".`,
+      `Scroll down: ${projects.length} frames, from ${names(projects.slice(0, 3))} to motion pieces and a research case study. Or try "Show me the work".`,
     ],
   },
   {

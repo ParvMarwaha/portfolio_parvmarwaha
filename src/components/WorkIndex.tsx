@@ -6,7 +6,8 @@ import { gsap } from "@/utils/gsap";
 import { projects, numberOf, displayTitle, projectHref, projectsOpenOnBehance, isOfType, TYPES, type ProjectType } from "@/content/projects";
 import RemoteImage from "@/components/ui/RemoteImage";
 
-const filters: ("All" | ProjectType)[] = ["All", ...TYPES];
+// Only the kinds there is work for (no empty filter).
+const filters: ("All" | ProjectType)[] = ["All", ...TYPES.filter((t) => projects.some((p) => isOfType(p, t)))];
 
 /** The whole canvas as a plain, scannable list. Pointing at a row floats its image beside the cursor. */
 export default function WorkIndex() {
