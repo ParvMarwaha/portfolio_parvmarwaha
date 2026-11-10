@@ -27,13 +27,13 @@ export const site = {
   about: {
     lead: "I'm Parv Marwaha, a designer from India. I like making things that look considered, and I can build and ship them too.",
     paragraphs: [
-      "Most of my work so far is design: product case studies, a mobile app prototype, brand identities, motion graphics and illustration. All of it is on the home page.",
-      "I work in Figma, After Effects and Illustrator, with Claude and Antigravity alongside them. I can build and ship what I design when a project needs it. I'm open to freelance projects and full-time roles.",
+      "Most of my work is product design and brand identity, with motion alongside. Lately I also build what I design: Varnmala and Noto are apps I designed and then built with Claude.",
+      "I'm open to freelance projects and full-time roles.",
     ],
     disciplines: {
-      "UI/UX": "Product and app design, from research to a clickable prototype.",
-      Branding: "Logos, visual identity and brand guidelines.",
-      Motion: "Short motion pieces, made in After Effects.",
+      "UI/UX": "Apps and websites, from research and user flows to wireframes, a polished interface and a clickable prototype. When it helps, I build it too.",
+      Branding: "Identities that hold together: the idea behind the brand, the logo, colour and type, and a brand book so anyone can use it right.",
+      Motion: "Short motion pieces in After Effects: product films, app walkthroughs, and transitions that make an interface feel alive.",
       Illustration: "Shape-based vector illustration.",
     },
   },
