@@ -1,4 +1,3 @@
-import { Outfit } from "next/font/google";
 import StoryIndex from "./StoryIndex";
 import BackLink from "./BackLink";
 import RevealImage from "./RevealImage";
@@ -7,8 +6,10 @@ import AccentPicker from "./AccentPicker";
 import { Band, H, Sub, Text, Bullets } from "./story";
 import { getProject } from "@/content/projects";
 
-// Noto's own typeface, loaded only on this page for the type specimen.
-const outfit = Outfit({ subsets: ["latin"], weight: ["300", "400", "500", "700", "800"], display: "swap" });
+// Noto's own typeface, loaded only on this page for the type specimen. It comes straight from Google Fonts in the
+// browser (as in the app itself), not through next/font: the host's build server could not fetch it at build time.
+const OUTFIT_CSS = "https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&display=swap";
+const outfit = { className: "font-outfit" };
 
 const N = "/images/noto";
 const LIME = "#D2F565";
@@ -100,6 +101,7 @@ export default function NotoStory() {
 
   return (
     <>
+      <link rel="stylesheet" href={OUTFIT_CSS} precedence="default" />
       <header className="mx-auto w-full max-w-[62rem] px-4 pt-28 md:px-6 md:pt-36">
         <BackLink />
         <h1 className="text-[1.25rem] font-medium tracking-tight">Noto</h1>

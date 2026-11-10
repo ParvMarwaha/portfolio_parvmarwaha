@@ -105,6 +105,11 @@
     text-transform: uppercase;
   }
 
+  /* Noto's typeface on its case study (the stylesheet is linked from NotoStory). */
+  .font-outfit {
+    font-family: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  }
+
   .scrollbar-none {
     scrollbar-width: none;
   }
