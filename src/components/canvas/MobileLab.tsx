@@ -32,7 +32,7 @@ export default function MobileLab() {
 
   return (
     <main className="mx-auto max-w-xl px-4 pb-20 pt-[5.25rem] md:max-w-2xl">
-      <section aria-label="Cover" className="flex min-h-[26rem] flex-col justify-between gap-10 bg-cobalt p-6 text-paper shadow-[0_40px_80px_-40px_rgba(14,15,26,0.7)]">
+      <section aria-label="Cover" className="on-primary flex min-h-[26rem] flex-col justify-between gap-10 bg-cobalt p-6 text-paper shadow-[0_40px_80px_-40px_rgba(14,15,26,0.7)]">
         <div className="label flex justify-between opacity-80">
           <span>Experiments — 2026</span>
           <span>India · {time} IST</span>

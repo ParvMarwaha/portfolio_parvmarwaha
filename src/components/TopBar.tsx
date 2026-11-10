@@ -8,6 +8,7 @@ import { site } from "@/content/site";
 import { getLenis } from "@/utils/lenis";
 import Magnetic from "@/components/ui/Magnetic";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
+import ModeToggle, { ModeRow } from "@/components/ModeToggle";
 import SoundToggle, { SoundBrain, SoundRow } from "@/components/SoundToggle";
 import NavLinks, { LINKS as links } from "@/components/NavLinks";
 
@@ -45,6 +46,7 @@ export default function TopBar() {
         </div>
 
         <div className="pointer-events-auto flex items-center gap-2">
+          <ModeToggle />
           <ThemeSwitcher />
           <SoundToggle />
           <Link
@@ -86,7 +88,7 @@ export default function TopBar() {
             animate={{ clipPath: "circle(150% at calc(100% - 40px) 32px)" }}
             exit={{ clipPath: "circle(0px at calc(100% - 40px) 32px)" }}
             transition={{ duration: 0.7, ease: [0.76, 0, 0.24, 1] }}
-            className="fixed inset-0 z-[55] flex flex-col justify-between bg-cobalt px-6 pb-8 pt-28 text-paper"
+            className="on-primary fixed inset-0 z-[55] flex flex-col justify-between bg-cobalt px-6 pb-8 pt-28 text-paper"
           >
             <nav className="flex flex-col gap-1" aria-label="Mobile">
               {[...links, { label: "Off hours", href: "/play", active: () => false }].map((l, i) => (
@@ -103,7 +105,10 @@ export default function TopBar() {
               ))}
             </nav>
             <div className="flex flex-col gap-5">
-              <SoundRow />
+              <div className="flex flex-wrap gap-2">
+                <SoundRow />
+                <ModeRow />
+              </div>
             <div className="label flex flex-col gap-2 opacity-80">
               <a href={`mailto:${site.email}`}>{site.email}</a>
               <span>2026 © {site.name}</span>

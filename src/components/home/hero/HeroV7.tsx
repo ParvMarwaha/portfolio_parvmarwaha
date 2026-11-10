@@ -1448,7 +1448,7 @@ export default function HeroV7() {
   let idx = 0;
   return (
     <div
-      className="relative overflow-hidden rounded-b-[1.5rem] bg-cobalt px-4 pb-4 pt-[5.25rem] text-paper md:rounded-b-[2rem] md:px-6 md:pb-6 md:pt-[5.75rem]"
+      className="on-primary relative overflow-hidden rounded-b-[1.5rem] bg-cobalt px-4 pb-4 pt-[5.25rem] text-paper md:rounded-b-[2rem] md:px-6 md:pb-6 md:pt-[5.75rem]"
       style={{ backgroundImage: "radial-gradient(circle, color-mix(in srgb, var(--paper) 16%, transparent) 1px, transparent 1.5px)", backgroundSize: "24px 24px" }}
     >
       <div className="group/hero mx-auto w-full max-w-[100vw]" data-entered={entered}>

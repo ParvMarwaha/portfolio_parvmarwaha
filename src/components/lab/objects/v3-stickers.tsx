@@ -68,7 +68,7 @@ function NameFace({ spec }: { spec: StickerSpec }) {
       <Body
         spec={spec}
         flow
-        artClass="bg-cobalt text-paper"
+        artClass="on-primary bg-cobalt text-paper"
         artStyle={{
           padding: "0.55em 0.6em 0.5em",
           backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.14) 0.05em, transparent 0.07em)",

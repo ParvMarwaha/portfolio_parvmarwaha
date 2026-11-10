@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* dark: utilities follow the site's own mode (html[data-mode="dark"]), not only the device setting. */
+@custom-variant dark (&:where([data-mode="dark"], [data-mode="dark"] *));
+
 /* Bone canvas, ink text, cobalt for UI and the cover, vermilion for the hire call, butter for sticky notes. */
 @theme inline {
   --color-paper: var(--paper);

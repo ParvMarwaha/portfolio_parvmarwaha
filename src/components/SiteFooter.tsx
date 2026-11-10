@@ -14,7 +14,7 @@ export default function SiteFooter({ cta = true }: { cta?: boolean }) {
   const link = "transition-colors hover:text-paper";
   return (
     <footer className="mt-12 md:mt-20" aria-label="Contact and site links">
-      <div className="rounded-t-[1.5rem] bg-cobalt text-paper md:rounded-t-[2rem]">
+      <div className="on-primary rounded-t-[1.5rem] bg-cobalt text-paper md:rounded-t-[2rem]">
         <div className="mx-auto box-content max-w-[100vw] px-4 pb-10 pt-14 [--gutter:2rem] md:px-6 md:pb-12 md:pt-24 md:[--gutter:3rem]">
         {cta && (
           <div className="mb-14 flex flex-col gap-8 md:mb-20 md:flex-row md:items-end md:justify-between">

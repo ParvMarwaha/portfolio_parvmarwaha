@@ -30,7 +30,7 @@ export default function Cover({
   return (
     <section
       aria-label="Cover"
-      className="absolute overflow-hidden bg-cobalt text-paper shadow-[0_40px_80px_-40px_rgba(14,15,26,0.7)]"
+      className="on-primary absolute overflow-hidden bg-cobalt text-paper shadow-[0_40px_80px_-40px_rgba(14,15,26,0.7)]"
       style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h, padding: pad, ...introStyle(introOn, 0) }}
       data-cover
     >

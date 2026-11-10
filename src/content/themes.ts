@@ -73,6 +73,29 @@ export const COBALT_CREAM: Theme = {
   },
 };
 
+/**
+ * Dark mode: the same Cobalt, at night. A near-black page with warm off-white text; the blue is lifted a touch so it
+ * still reads as text on the dark page while white text on it stays crisp. Blue surfaces (the cover, footer, menu) keep
+ * their light-mode insides, see `.on-primary` in globals.css.
+ */
+export const COBALT_DARK: Theme = {
+  name: "Cobalt Night",
+  fx: "none",
+  vars: {
+    paper: "#0D0E15",
+    paper2: "#181A24",
+    ink: "#ECEAE3",
+    mute: "#9B99A7",
+    line: "rgba(236, 234, 227, 0.14)",
+    primary: "#3D4AFF",
+    accent: "#FF4D1F",
+    highlight: "#FFD84D",
+    deep: "#05060A",
+    onDeep: "#ECEAE3",
+    spark: "#FFD84D",
+  },
+};
+
 /** Which CSS variable each palette role is written to. */
 export const VAR_MAP: Record<keyof Palette, string> = {
   paper: "--paper",
@@ -89,10 +112,24 @@ export const VAR_MAP: Record<keyof Palette, string> = {
 };
 
 export const THEME_KEY = "pm-theme";
+/** "light" or "dark", saved only once the visitor picks one; until then the site follows the device. */
+export const MODE_KEY = "pm-mode";
 
-/** The default palette as a stylesheet; generated themes are set as inline variables on <html>. */
+const varsOf = (t: Theme, only?: (keyof Palette)[]) =>
+  (only ?? (Object.keys(VAR_MAP) as (keyof Palette)[])).map((k) => `${VAR_MAP[k]}:${t.vars[k]};`).join("");
+
+/**
+ * The two base palettes as a stylesheet (light on :root, dark under html[data-mode="dark"]); generated themes are set
+ * as inline variables on <html>, over either. Inside a blue surface the light page colours come back in dark mode, so
+ * the cover, footer and menu look exactly as they do by day (not while a generated theme is on, which has its own).
+ */
 export const themeCss = () =>
-  `:root{${(Object.keys(VAR_MAP) as (keyof Palette)[]).map((k) => `${VAR_MAP[k]}:${COBALT.vars[k]};`).join("")}}`;
+  `:root{${varsOf(COBALT)}color-scheme:light}` +
+  `html[data-mode="dark"]{${varsOf(COBALT_DARK)}color-scheme:dark}` +
+  `html[data-mode="dark"]:not([data-themed]) .on-primary{${varsOf(COBALT, ["paper", "paper2", "ink", "mute", "line"])}}`;
+
+/** Runs before first paint: the saved mode, else the device's, so a dark visit never flashes white. */
+export const modeScript = `try{var m=localStorage.getItem('${MODE_KEY}');if(m!=='light'&&m!=='dark')m=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.mode=m}catch(e){}`;
 
 // ---------------------------------------------------------------------------------------------------------
 // The generator

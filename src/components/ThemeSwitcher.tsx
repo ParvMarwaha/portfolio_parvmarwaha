@@ -3,19 +3,15 @@
 import { useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { COBALT, generateTheme, type Theme } from "@/content/themes";
-import { applyTheme, readTheme } from "@/utils/theme";
-import { isCoarse } from "@/utils/device";
-
-type ViewTransitionLike = { ready: Promise<void> };
-type DocWithTransitions = Document & { startViewTransition?: (update: () => void) => ViewTransitionLike };
+import { generateTheme, type Theme } from "@/content/themes";
+import { applyTheme, baseTheme, paintFrom, readTheme } from "@/utils/theme";
 
 const FX_LABEL = { none: "", xray: "x-ray" } as const;
 
 /**
  * One button, no menu: press it and the whole site is repainted in a new, random palette, sometimes a dark,
  * glowing "x-ray" one. The new colours spread out from the
- * button like ink in water. The toast has a way back to Cobalt, and a reload always starts from Cobalt again. Only the site's own
+ * button like ink in water. The toast has a way back to Cobalt, and a reload always starts from Cobalt (light or dark) again. Only the site's own
  * colours change: the project pictures always keep theirs.
  */
 export default function ThemeSwitcher() {
@@ -30,51 +26,13 @@ export default function ThemeSwitcher() {
     const box = e.currentTarget.getBoundingClientRect();
     const x = e.clientX || box.left + box.width / 2;
     const y = e.clientY || box.top + box.height / 2;
-
-    const apply = () => flushSync(() => applyTheme(next));
-    const doc = document as DocWithTransitions;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const radius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
-    if (reduced) {
-      apply();
-    } else if (doc.startViewTransition && !isCoarse() && window.innerWidth >= 768) {
-      doc.startViewTransition(apply).ready
-        .then(() => {
-          document.documentElement.animate(
-            { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
-            { duration: 1000, easing: "cubic-bezier(0.65, 0, 0.2, 1)", pseudoElement: "::view-transition-new(root)" }
-          );
-        })
-        .catch(() => {});
-    } else {
-      // Phones: no page snapshot (it is heavy, and flashed the 3D card the wrong way up). A flat sheet in the new
-      // colour floods out from the button, the site is repainted underneath it, then the sheet lifts.
-      const sheet = document.createElement("div");
-      sheet.setAttribute("aria-hidden", "true");
-      sheet.style.cssText = `position:fixed;inset:0;z-index:9989;pointer-events:none;clip-path:circle(0px at ${x}px ${y}px);background:${(next ?? COBALT).vars.primary}`;
-      document.body.appendChild(sheet);
-      const flood = sheet.animate(
-        { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
-        { duration: 450, easing: "cubic-bezier(0.65, 0, 0.2, 1)", fill: "forwards" }
-      );
-      let done = false;
-      const land = () => {
-        if (done) return;
-        done = true;
-        apply();
-        sheet.animate({ opacity: [1, 0] }, { duration: 350, easing: "ease-out", fill: "forwards" });
-        window.setTimeout(() => sheet.remove(), 450);
-      };
-      flood.finished.then(land, land);
-      // If the browser holds animations back (a backgrounded tab), the colours must still change.
-      window.setTimeout(land, 700);
-    }
+    paintFrom(x, y, () => flushSync(() => applyTheme(next)), (next ?? baseTheme()).vars.primary);
 
     // The face of the button spins a little further on every press.
     turns.current += 1;
     if (faceRef.current) faceRef.current.style.transform = `rotate(${turns.current * 137}deg)`;
 
-    setToast(next ?? COBALT);
+    setToast(next ?? baseTheme());
     window.clearTimeout(toastTimer.current);
     toastTimer.current = window.setTimeout(() => setToast(null), 3200);
   };
@@ -82,7 +40,7 @@ export default function ThemeSwitcher() {
   const shuffle = (e: React.MouseEvent<HTMLElement>) => {
     const kind = nextKind.current;
     nextKind.current = kind === "plain" ? "xray" : "plain";
-    change(e, generateTheme(readTheme()?.name ?? COBALT.name, kind));
+    change(e, generateTheme(readTheme()?.name ?? baseTheme().name, kind));
   };
 
   return (
@@ -122,7 +80,7 @@ export default function ThemeSwitcher() {
                 {toast.name}
                 {toast.fx !== "none" && <span className="ml-2 rounded-full bg-paper/15 px-2 py-0.5 text-[0.6875rem] uppercase tracking-[0.08em]">{FX_LABEL[toast.fx]}</span>}
               </span>
-              {toast.name !== COBALT.name ? (
+              {toast.name !== baseTheme().name ? (
                 <button
                   type="button"
                   onClick={(e) => {

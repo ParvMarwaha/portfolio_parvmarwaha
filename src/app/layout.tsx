@@ -9,7 +9,7 @@ import Preloader from "@/components/Preloader";
 import TopBar from "@/components/TopBar";
 import Confetti from "@/components/Confetti";
 import { site } from "@/content/site";
-import { THEME_KEY, themeCss } from "@/content/themes";
+import { THEME_KEY, modeScript, themeCss } from "@/content/themes";
 import PageTransition from "@/components/PageTransition";
 import FaviconAnimator from "@/components/FaviconAnimator";
 import FpsMeter from "@/components/FpsMeter";
@@ -43,7 +43,8 @@ export const viewport: Viewport = {
 
 // Runs before first paint so returning visitors never see the intro curtain flash.
 // Every visit opens in Cobalt, however the last one ended: an old saved palette is cleared, never restored.
-const introScript = `try{if(sessionStorage.getItem('pm-intro')==='1')document.documentElement.dataset.intro='done'}catch(e){}try{localStorage.removeItem('${THEME_KEY}')}catch(e){}`;
+// It also sets light or dark (the saved choice, else the device) so a dark visit never flashes white.
+const introScript = `try{if(sessionStorage.getItem('pm-intro')==='1')document.documentElement.dataset.intro='done'}catch(e){}try{localStorage.removeItem('${THEME_KEY}')}catch(e){}${modeScript}`;
 
 export default function RootLayout({
   children,

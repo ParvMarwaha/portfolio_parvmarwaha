@@ -59,14 +59,14 @@ export default function ThenNow({ pairs, thenLabel = "Design", nowLabel = "App" 
             className="absolute inset-0 h-full w-full object-cover"
             style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}
           />
-          <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-ink/80 px-2.5 py-1 text-[0.6875rem] font-medium text-paper" style={{ opacity: pos > 18 ? 1 : 0 }}>
+          <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-[#0E0F1A]/80 px-2.5 py-1 text-[0.6875rem] font-medium text-white" style={{ opacity: pos > 18 ? 1 : 0 }}>
             {thenLabel}
           </span>
           <span className="pointer-events-none absolute right-3 top-3 rounded-full bg-[#FF5C00] px-2.5 py-1 text-[0.6875rem] font-medium text-white" style={{ opacity: pos < 82 ? 1 : 0 }}>
             {nowLabel}
           </span>
           <span className="pointer-events-none absolute inset-y-0 w-0.5 -translate-x-1/2 bg-white shadow-[0_0_0_1px_rgba(14,15,26,.15)]" style={{ left: `${pos}%` }}>
-            <span className="absolute left-1/2 top-1/2 grid h-9 w-9 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white text-[0.75rem] text-ink shadow-md">
+            <span className="absolute left-1/2 top-1/2 grid h-9 w-9 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white text-[0.75rem] text-[#0E0F1A] shadow-md">
               ⟷
             </span>
           </span>
