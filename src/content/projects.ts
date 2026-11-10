@@ -92,6 +92,22 @@ export const projects: Project[] = [
       "https://embed.figma.com/proto/QY7HiRt68QSTP6nMMcKek3/design-project---language?page-id=163%3A26&node-id=892-540&viewport=-633%2C-2344%2C0.41&scaling=scale-down&content-scaling=fixed&starting-point-node-id=892%3A540&show-proto-sidebar=1&embed-host=share",
   },
   {
+    // Not on Behance: my own app for tasks and money, designed and built with Claude. Its page here is its own story
+    // (src/components/work/NotoStory.tsx); the screens are from the app's demo build with made-up data.
+    slug: "noto",
+    accent: "#2F7A1D",
+    title: "Noto",
+    kind: "tasks & money app",
+    type: "UI/UX",
+    year: 2026,
+    published: "November 2026",
+    summary: "One calm app for the day's tasks and the day's money: how much you can safely spend today, worked out for you.",
+    tools: ["Claude", "Antigravity"],
+    fields: ["Product Design", "Mobile App", "Personal Finance"],
+    image: "/images/noto/cover.webp",
+    gallery: [],
+  },
+  {
     slug: "sparq",
     behance: "https://www.behance.net/gallery/231161263/sparq-brand-identity",
     accent: "#2D3BFF",

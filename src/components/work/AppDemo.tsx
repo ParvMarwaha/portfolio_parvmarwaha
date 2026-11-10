@@ -4,11 +4,30 @@ import { useEffect, useState } from "react";
 import { getLenis } from "@/utils/lenis";
 
 /**
- * The real app, running in the page inside a phone. It is a web build of the same code (public/varnmala-app) in a
- * demo mode: no account, progress kept only in this browser. It loads when asked, so it never slows the page or
- * pulls the scroll. On a phone it opens on its own, full screen, where it feels like the app.
+ * The real app, running in the page inside a phone. It is a web build of the same code (public/varnmala-app,
+ * public/noto-app) in a demo mode: no account, made-up or fresh data kept only in this browser. It loads when asked, so
+ * it never slows the page or pulls the scroll. On a phone it opens on its own, full screen, where it feels like the app.
+ * `reset`: the beginnings of the browser-storage keys the app writes, cleared by "Start over".
  */
-export default function AppDemo({ src, poster, storageKey }: { src: string; poster: string; storageKey: string }) {
+export default function AppDemo({
+  src,
+  poster,
+  name,
+  tips,
+  note,
+  reset,
+  accent = "#FF5C00",
+  onAccent = "#ffffff",
+}: {
+  src: string;
+  poster: string;
+  name: string;
+  tips: string[];
+  note: string;
+  reset: string[];
+  accent?: string;
+  onAccent?: string;
+}) {
   const [on, setOn] = useState(false);
   const [run, setRun] = useState(0);
 
@@ -37,7 +56,7 @@ export default function AppDemo({ src, poster, storageKey }: { src: string; post
 
   const restart = () => {
     try {
-      localStorage.removeItem(storageKey);
+      for (const k of Object.keys(localStorage)) if (reset.some((r) => k.startsWith(r))) localStorage.removeItem(k);
     } catch {}
     setRun((r) => r + 1);
   };
@@ -51,7 +70,7 @@ export default function AppDemo({ src, poster, storageKey }: { src: string; post
             <iframe
               key={run}
               src={src}
-              title="Varnmala, the app"
+              title={`${name}, the app`}
               className="absolute left-0 top-0 origin-top-left border-0"
               style={{ width: 430, height: 932, transform: `scale(${352 / 430})` }}
             />
@@ -61,7 +80,7 @@ export default function AppDemo({ src, poster, storageKey }: { src: string; post
               <img src={poster} alt="" className="absolute inset-0 h-full w-full object-cover" />
               <span className="absolute inset-0 bg-ink/30 transition-colors duration-300 group-hover:bg-ink/40" aria-hidden />
               <span className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-3 whitespace-nowrap rounded-full bg-paper py-3 pl-3 pr-5 text-[0.9375rem] font-medium tracking-tight text-ink shadow-lg transition-transform duration-300 group-hover:scale-105">
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-[#FF5C00] text-white" aria-hidden>
+                <span className="grid h-8 w-8 place-items-center rounded-full" style={{ background: accent, color: onAccent }} aria-hidden>
                   <svg viewBox="0 0 12 12" className="ml-0.5 h-3 w-3 fill-current">
                     <path d="M2 1.2v9.6L10.4 6z" />
                   </svg>
@@ -74,12 +93,12 @@ export default function AppDemo({ src, poster, storageKey }: { src: string; post
         <div>
           <p className="text-[0.8125rem] text-mute">Try it</p>
           <ul className="mt-3 grid gap-3 text-[0.9375rem] leading-relaxed text-ink/75">
-            <li>Pick a language and set a daily goal.</li>
-            <li>Tap a letter to hear it, then trace it.</li>
-            <li>Open the story of Hindi and scroll back 3,500 years.</li>
+            {tips.map((t) => (
+              <li key={t}>{t}</li>
+            ))}
           </ul>
           <p className="mt-6 max-w-[24rem] text-[0.8125rem] leading-relaxed text-mute">
-            A web build of the app in a demo mode: no account needed, and your progress stays in this browser.
+            {note}
           </p>
           {on && (
             <button
@@ -101,9 +120,11 @@ export default function AppDemo({ src, poster, storageKey }: { src: string; post
       >
         <span>
           <span className="block text-[0.8125rem] text-mute">The app, in your browser</span>
-          <span className="mt-0.5 block text-[1rem] font-medium tracking-tight">Try Varnmala</span>
+          <span className="mt-0.5 block text-[1rem] font-medium tracking-tight">Try {name}</span>
         </span>
-        <span className="shrink-0 rounded-full bg-[#FF5C00] px-4 py-2.5 text-[0.875rem] font-medium text-white">Open ↗</span>
+        <span className="shrink-0 rounded-full px-4 py-2.5 text-[0.875rem] font-medium" style={{ background: accent, color: onAccent }}>
+          Open ↗
+        </span>
       </a>
     </>
   );

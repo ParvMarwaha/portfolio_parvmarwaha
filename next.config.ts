@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
     return [
       { source: "/varnmala-app", destination: "/varnmala-app/index.html" },
       { source: "/varnmala-app/:path*", destination: "/varnmala-app/index.html" },
+      // Noto (a Vite build in public/noto-app) is a single page.
+      { source: "/noto-app", destination: "/noto-app/index.html" },
     ];
   },
   async redirects() {

@@ -5,11 +5,12 @@ import SiteFooter from "@/components/SiteFooter";
 import { ReadingProgress } from "@/components/ProjectChrome";
 import RootsStory from "@/components/work/RootsStory";
 import VarnmalaStory from "@/components/work/VarnmalaStory";
+import NotoStory from "@/components/work/NotoStory";
 import ProjectStory from "@/components/work/ProjectStory";
 import StartAtTop from "@/components/work/StartAtTop";
 
 // Projects that tell their own story; the rest use the standard case-study page (ProjectStory).
-const STORIES: Record<string, () => React.ReactNode> = { "roots-foundation": RootsStory, varnmala: VarnmalaStory };
+const STORIES: Record<string, () => React.ReactNode> = { "roots-foundation": RootsStory, varnmala: VarnmalaStory, noto: NotoStory };
 
 export function generateStaticParams() {
   return projects.map((p) => ({ slug: p.slug }));

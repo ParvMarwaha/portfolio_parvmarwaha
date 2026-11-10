@@ -311,7 +311,14 @@ export default function VarnmalaStory() {
             The app itself, not a prototype: a full Hindi course and a Bengali course, every letter with its sound, and the story of each language.
           </Text>
           <div className="mt-10">
-            <AppDemo src="/varnmala-app/onboarding" poster={`${V}/now/language.webp`} storageKey="varnmala:state:v1" />
+            <AppDemo
+              src="/varnmala-app/onboarding"
+              poster={`${V}/now/language.webp`}
+              name="Varnmala"
+              tips={["Pick a language and set a daily goal.", "Tap a letter to hear it, then trace it.", "Open the story of Hindi and scroll back 3,500 years."]}
+              note="A web build of the app in a demo mode: no account needed, and your progress stays in this browser."
+              reset={["varnmala:"]}
+            />
           </div>
         </Band>
       </div>
