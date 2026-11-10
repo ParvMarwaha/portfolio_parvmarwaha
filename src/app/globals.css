@@ -1,8 +1,5 @@
 @import "tailwindcss";
 
-/* dark: utilities follow the site's own mode (html[data-mode="dark"]), not only the device setting. */
-@custom-variant dark (&:where([data-mode="dark"], [data-mode="dark"] *));
-
 /* Bone canvas, ink text, cobalt for UI and the cover, vermilion for the hire call, butter for sticky notes. */
 @theme inline {
   --color-paper: var(--paper);
@@ -47,6 +44,12 @@
     background-color: var(--paper);
     color: var(--ink);
     -webkit-font-smoothing: antialiased;
+  }
+
+  /* Shown only by day or only by night (the sun/moon icons, the menu's dark mode label). */
+  html[data-mode="dark"] .day-only,
+  html:not([data-mode="dark"]) .night-only {
+    display: none;
   }
 
   /* Returning visitors in the same session skip the intro curtain. */
