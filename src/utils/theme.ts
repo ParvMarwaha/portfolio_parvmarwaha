@@ -53,16 +53,6 @@ export function setMode(mode: Mode, remember = true) {
   window.dispatchEvent(new Event("pm:mode"));
 }
 
-/** True once the visitor has picked a mode themselves (then the device's setting no longer moves it). */
-export function modeIsChosen() {
-  try {
-    const m = localStorage.getItem(MODE_KEY);
-    return m === "light" || m === "dark";
-  } catch {
-    return false;
-  }
-}
-
 type ViewTransitionLike = { ready: Promise<void> };
 type DocWithTransitions = Document & { startViewTransition?: (update: () => void) => ViewTransitionLike };
 

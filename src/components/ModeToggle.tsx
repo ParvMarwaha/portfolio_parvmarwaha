@@ -1,25 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
 import { flushSync } from "react-dom";
 import { COBALT, COBALT_DARK } from "@/content/themes";
-import { getMode, modeIsChosen, paintFrom, setMode } from "@/utils/theme";
+import { getMode, paintFrom, setMode } from "@/utils/theme";
 
 /**
- * Day and night. The site starts in the device's mode; a press switches it (and remembers the choice), with the same
+ * Day and night. The site always starts light; a press switches it (and remembers the choice), with the same
  * circle reveal as the colour button. Both icons are drawn and CSS shows the right one, so the first paint is never wrong.
  */
 export default function ModeToggle() {
-  // Until the visitor picks one, follow the device if it changes (an evening switch to dark, say).
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const follow = () => {
-      if (!modeIsChosen()) setMode(mq.matches ? "dark" : "light", false);
-    };
-    mq.addEventListener("change", follow);
-    return () => mq.removeEventListener("change", follow);
-  }, []);
-
   const toggle = (e: React.MouseEvent<HTMLButtonElement>) => {
     const next = getMode() === "dark" ? "light" : "dark";
     const box = e.currentTarget.getBoundingClientRect();

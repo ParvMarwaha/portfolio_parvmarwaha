@@ -112,7 +112,7 @@ export const VAR_MAP: Record<keyof Palette, string> = {
 };
 
 export const THEME_KEY = "pm-theme";
-/** "light" or "dark", saved only once the visitor picks one; until then the site follows the device. */
+/** "light" or "dark", saved once the visitor picks one; until then the site is light. */
 export const MODE_KEY = "pm-mode";
 
 const varsOf = (t: Theme, only?: (keyof Palette)[]) =>
@@ -128,8 +128,8 @@ export const themeCss = () =>
   `html[data-mode="dark"]{${varsOf(COBALT_DARK)}color-scheme:dark}` +
   `html[data-mode="dark"]:not([data-themed]) .on-primary{${varsOf(COBALT, ["paper", "paper2", "ink", "mute", "line"])}}`;
 
-/** Runs before first paint: the saved mode, else the device's, so a dark visit never flashes white. */
-export const modeScript = `try{var m=localStorage.getItem('${MODE_KEY}');if(m!=='light'&&m!=='dark')m=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.mode=m}catch(e){}`;
+/** Runs before first paint: dark only if the visitor chose it; otherwise the site always opens light. */
+export const modeScript = `try{var m=localStorage.getItem('${MODE_KEY}');if(m!=='dark')m='light';document.documentElement.dataset.mode=m}catch(e){}`;
 
 // ---------------------------------------------------------------------------------------------------------
 // The generator
